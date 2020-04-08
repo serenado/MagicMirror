@@ -101,5 +101,10 @@ var processSpeech = function(transcript) {
     }
   }
 
+  // TODO : have a global variable that keeps track of the logged in state
+  else if (userSaid(transcript, ['login'])) {
+    handleAuthClick();
+  }
+
   return processed;
 };
