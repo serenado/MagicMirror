@@ -10,7 +10,7 @@ var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'S
 
 var CURSORSIZE = 20;
 var CALENDARWIDTH = 200;
-var HOURHEIGHT = 40;
+var HOURHEIGHT = 60;
 
 // show calendar from 10am to 6pm
 var CALENDAR_START = { hour: 10, minute: 0, second: 0 };

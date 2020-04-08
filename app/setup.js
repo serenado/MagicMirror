@@ -89,10 +89,13 @@ var setupUserInterface = function() {
     var duration = getDuration(start, end);
     var event = new Surface({
       size: [CALENDARWIDTH, HOURHEIGHT * duration - 2],
+      content: `<text style="font-family:verdana; font-size:10px; font-weight:bold">${e.summary}</text>`,
       properties: {
           backgroundColor: Colors[e.colorId],
-          color: "white",
+          color: "black",
           borderRadius: HOURHEIGHT/10 + 'px',
+          paddingLeft: '5px',
+          paddingRight: '5px'
       },
     });
     var transformModifier = new StateModifier({
