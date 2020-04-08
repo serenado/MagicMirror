@@ -6,18 +6,39 @@ var parseDateTime = function(dateTime) {
   var hour = parseInt(dateTime.slice(11, 13));
   var minute = parseInt(dateTime.slice(14, 16));
   var second = parseInt(dateTime.slice(17, 19));
-  return {
+  return new Time({
     year: year,
     month: month,
     day: day,
     hour: hour,
     minute: minute,
     second: second
-  };
+  });
 };
 
-// gets duration in hours where start and end are parsed dateTimes
+// gets duration in hours where start and end are Time objects
 // start should be before end
 var getDuration = function(start, end) {
-  return (end.hour - start.hour) + (end.minute - start.minute) / 60.0;
+  return (end.get('hour') - start.get('hour')) + (end.get('minute') - start.get('minute')) / 60.0;
 };
+
+// gets event being hovered over, returns false if none
+var getIntersectingEvent = function(screenPosition) {
+  var intersectingEvent = false
+  events.forEach(event => {
+    if (event.isIntersecting(screenPosition)) {
+      intersectingEvent = event;
+    }
+  });
+  return intersectingEvent;
+};
+
+// highlight event by adding a white border, event is an Event object
+var highlightEvent = function(event) {
+  event.get('surface').setProperties({border: "solid white 2px"});
+};
+
+// unhilight event
+var unhilightEvent = function(event) {
+  event.get('surface').setProperties({border: ""});
+}

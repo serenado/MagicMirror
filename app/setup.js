@@ -51,6 +51,7 @@ var setupUserInterface = function() {
     properties : {
         backgroundColor: 'white',
         borderRadius: CURSORSIZE/2 + 'px',
+        border: 'solid black 1px',
         pointerEvents : 'none',
         zIndex: 1
     }
@@ -87,8 +88,12 @@ var setupUserInterface = function() {
     var start = parseDateTime(e.start.dateTime);
     var end = parseDateTime(e.end.dateTime);
     var duration = getDuration(start, end);
+    var size = [CALENDARWIDTH, HOURHEIGHT * duration - 2];
+    var xpos = calendarOrigin[0];
+    var ypos = calendarOrigin[1] + HOURHEIGHT * getDuration(new Time(CALENDAR_START), start);
+
     var event = new Surface({
-      size: [CALENDARWIDTH, HOURHEIGHT * duration - 2],
+      size: size,
       content: `<text style="font-family:verdana; font-size:10px; font-weight:bold">${e.summary}</text>`,
       properties: {
           backgroundColor: Colors[e.colorId],
@@ -99,13 +104,13 @@ var setupUserInterface = function() {
       },
     });
     var transformModifier = new StateModifier({
-      transform: Transform.translate(calendarOrigin[0], calendarOrigin[1] + HOURHEIGHT * getDuration(CALENDAR_START, start), 0)
+      transform: Transform.translate(xpos, ypos, 0)
     });
     // TODO: fill in later
     var eventModifier = new Modifier({
     });
     calendarSurface.add(transformModifier).add(eventModifier).add(event);
-    events.push(event);
+    events.push(new Event({ start, end, size, pos: [xpos, ypos], data: e, surface: event }));
     eventModifiers.push(eventModifier);
   });
   HOURLABELS.forEach(function(hourLabel, i) {

@@ -13,7 +13,8 @@ var CALENDARWIDTH = 200;
 var HOURHEIGHT = 60;
 
 // show calendar from 10am to 6pm
-var CALENDAR_START = { hour: 10, minute: 0, second: 0 };
+// TODO: should these be Time objects?
+var CALENDAR_START = { hour: 10, minute: 0, second: 0};
 var CALENDAR_END = { hour: 18, minute: 0, second: 0 };
 var HOURLABELS = [ "10 AM", "11 AM", "Noon", "1 PM", "2 PM", "3 PM", "4 PM", "5 PM", "6 PM"];
 

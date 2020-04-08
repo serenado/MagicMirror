@@ -5,9 +5,15 @@ var clock = new Clock();
 // UI SETUP
 setupUserInterface();
 
+var hoveredEvent = false;
+
 // MAIN LOOP
 Leap.loop({ enableGestures: true},  function(frame) {
+  // things that should happen every frame
   clock.update();
+  events.forEach(event => {
+    unhilightEvent(event);
+  });
 
   // Check if hand is active
   if (frame.hands.length > 0) {
@@ -18,43 +24,50 @@ Leap.loop({ enableGestures: true},  function(frame) {
     cursorPosition[1] += 400;
     cursor.setScreenPosition(cursorPosition);
 
-    // GESTURE RECOGNITION
-    // Insert code for hand gestures here
+    // highlight hovered event
+    if (calendarFader.isVisible()) {
+      hoveredEvent = getIntersectingEvent(cursorPosition);
+      if (hoveredEvent) {
+        highlightEvent(hoveredEvent);
+      }
+    }
 
-    // Testing the Leap API's built in gesture recognition
+    // GESTURE RECOGNITION
+
+    // Leap API's built in gesture recognition
     if(frame.valid && frame.gestures.length > 0) {
       frame.gestures.forEach(function(gesture){
-          switch (gesture.type){
-            case "circle":
-                console.log("Circle Gesture");
-                break;
-            case "keyTap":
-                console.log("Key Tap Gesture");
-                break;
-            case "screenTap":
-                console.log("Screen Tap Gesture");
-                break;
-            case "swipe":
-                console.log("Swipe Gesture");
-                //Classify swipe as either horizontal or vertical
-                var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
-                //Classify as right-left or up-down
-                if(isHorizontal) {
-                  if(gesture.direction[0] > 0) { // right
-                    
-                  } else { // left
-                    
-                  }
-                } else { //vertical
-                  if(gesture.direction[1] > 0) { // up
-                    if (calendarFader.isVisible()) {
-                      calendarFader.hide();
-                    }
-                  } else { // down
-                    
-                  }                  
+        switch (gesture.type){
+          case "circle":
+            console.log("Circle Gesture");
+            break;
+          case "keyTap":
+            console.log("Key Tap Gesture");
+            break;
+          case "screenTap":
+            console.log("Screen Tap Gesture");
+            break;
+          case "swipe":
+            console.log("Swipe Gesture");
+            //Classify swipe as either horizontal or vertical
+            var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
+            //Classify as right-left or up-down
+            if(isHorizontal) {
+              if(gesture.direction[0] > 0) { // right
+                
+              } else { // left
+                
+              }
+            } else { //vertical
+              if(gesture.direction[1] > 0) { // up
+                if (calendarFader.isVisible()) {
+                  calendarFader.hide();
                 }
-                break;
+              } else { // down
+                
+              }                  
+            }
+            break;
           }
       });
     }
