@@ -5,8 +5,6 @@ var clock = new Clock();
 // UI SETUP
 setupUserInterface();
 
-var showingCalendar = false;
-
 // MAIN LOOP
 Leap.loop({ enableGestures: true},  function(frame) {
   clock.update();
@@ -38,6 +36,24 @@ Leap.loop({ enableGestures: true},  function(frame) {
                 break;
             case "swipe":
                 console.log("Swipe Gesture");
+                //Classify swipe as either horizontal or vertical
+                var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
+                //Classify as right-left or up-down
+                if(isHorizontal) {
+                  if(gesture.direction[0] > 0) { // right
+                    
+                  } else { // left
+                    
+                  }
+                } else { //vertical
+                  if(gesture.direction[1] > 0) { // up
+                    if (calendarFader.isVisible()) {
+                      calendarFader.hide();
+                    }
+                  } else { // down
+                    
+                  }                  
+                }
                 break;
           }
       });
@@ -64,9 +80,12 @@ var processSpeech = function(transcript) {
 
   var processed = false;
 
-  if (!showingCalendar && userSaid(transcript, ['calendar', 'schedule'])) {
-    showingCalendar = true;
-    showCalendar();
+  if (userSaid(transcript, ['calendar', 'schedule'])) {
+    if (calendarFader.isVisible()) {
+      calendarFader.hide();
+    } else {
+      calendarFader.show();
+    }
   }
 
   // TODO : have a global variable that keeps track of the logged in state
@@ -75,9 +94,4 @@ var processSpeech = function(transcript) {
   }
 
   return processed;
-};
-
-// CALENDAR DISPLAY
-var showCalendar = function() {
-  return
 };

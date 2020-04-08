@@ -3,14 +3,18 @@ var Engine = famous.core.Engine;
 var Modifier = famous.core.Modifier;
 var Transform = famous.core.Transform;
 var Surface = famous.core.Surface;
+var ContainerSurface = famous.surfaces.ContainerSurface;
 var ImageSurface = famous.surfaces.ImageSurface;
 var StateModifier = famous.modifiers.StateModifier;
 var Draggable = famous.modifiers.Draggable;
+var Fader = famous.modifiers.Fader;
 var GridLayout = famous.views.GridLayout;
 
 var events = [];
 var eventModifiers = [];
 var tileModifiers = [];
+var calendarFader = new Fader();
+calendarFader.hide();
 var calendarOrigin = [70, 40];
 var labelWidth = 40;
 
@@ -78,16 +82,20 @@ var setupUserInterface = function() {
   mainContext.add(clockModifier).add(clockSurface);
 
   // Show the calendar
+  var calendarSurface = new ContainerSurface();
   EVENTS.forEach(e => {
     var start = parseDateTime(e.start.dateTime);
     var end = parseDateTime(e.end.dateTime);
     var duration = getDuration(start, end);
     var event = new Surface({
       size: [CALENDARWIDTH, HOURHEIGHT * duration - 2],
+      content: `<text style="font-family:verdana; font-size:10px; font-weight:bold">${e.summary}</text>`,
       properties: {
           backgroundColor: Colors[e.colorId],
-          color: "white",
+          color: "black",
           borderRadius: HOURHEIGHT/10 + 'px',
+          paddingLeft: '5px',
+          paddingRight: '5px'
       },
     });
     var transformModifier = new StateModifier({
@@ -96,7 +104,7 @@ var setupUserInterface = function() {
     // TODO: fill in later
     var eventModifier = new Modifier({
     });
-    mainContext.add(transformModifier).add(eventModifier).add(event);
+    calendarSurface.add(transformModifier).add(eventModifier).add(event);
     events.push(event);
     eventModifiers.push(eventModifier);
   });
@@ -106,7 +114,6 @@ var setupUserInterface = function() {
         size: [labelWidth, HOURHEIGHT],
         properties: {
           fontFamily: "verdana",
-          // textAlignVertical: "center",
           textAlign: "right",
           color: "white",
           fontSize: "10px"
@@ -115,6 +122,8 @@ var setupUserInterface = function() {
     var labelModifier = new StateModifier({
       transform: Transform.translate(calendarOrigin[0] - 50, calendarOrigin[1] + i * HOURHEIGHT - 5, 0)
     });
-    mainContext.add(labelModifier).add(label);
+    calendarSurface.add(labelModifier).add(label);
   });
+  // calendarFader is defined at the top of the file
+  mainContext.add(calendarFader).add(calendarSurface);
 };
