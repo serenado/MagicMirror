@@ -19,7 +19,7 @@ calendarFader.hide();
 var calendarOrigin = [70, 40];
 var labelWidth = 40;
 
-var background, otherFeedback, mainContext, calendarNode;
+var background, otherFeedback, calendarContext, calendarNode;
 
 // Engine.on('prerender', function() {
 //   console.log(Engine.getContexts().length);
@@ -88,6 +88,12 @@ var setupUserInterface = function() {
   mainContext.add(clockModifier).add(clockSurface);
 
   // Show the calendar
+  drawCalendar();
+};
+
+// CALENDAR
+var drawCalendar = function() {
+  calendarContext = Engine.createContext();
   var calendarSurface = new ContainerSurface();
   EVENTS.forEach((e, i) => {
     var start = parseDateTime(e.start.dateTime);
@@ -136,5 +142,5 @@ var setupUserInterface = function() {
     calendarSurface.add(labelModifier).add(label);
   });
   // calendarFader is defined at the top of the file
-  calendarNode = mainContext.add(calendarFader).add(calendarSurface);
-};
+  calendarNode = calendarContext.add(calendarFader).add(calendarSurface);
+}

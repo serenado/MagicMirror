@@ -42,3 +42,10 @@ var highlightEvent = function(event) {
 var unhilightEvent = function(event) {
   event.get('surface').setProperties({border: ""});
 }
+
+// removes old calendar from screen and Engine, draws calendar again
+var redrawCalendar = function() {
+  calendarNode.set({});
+  Engine.deregisterContext(calendarContext);
+  drawCalendar();
+}
