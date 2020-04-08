@@ -134,6 +134,7 @@ function getEventsForToday() {
 	  'orderBy': 'startTime'
 	}).then(function(response) {
 	  EVENTS = response.result.items;
+	  calendarNode.set({});
 	  Engine.deregisterContext(mainContext);
 	  setupUserInterface();
 	  console.log(EVENTS);

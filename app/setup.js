@@ -19,7 +19,11 @@ calendarFader.hide();
 var calendarOrigin = [70, 40];
 var labelWidth = 40;
 
-var background, otherFeedback, mainContext;
+var background, otherFeedback, mainContext, calendarNode;
+
+// Engine.on('prerender', function() {
+//   console.log(Engine.getContexts().length);
+// })
 
 // USER INTERFACE SETUP
 var setupUserInterface = function() {
@@ -132,5 +136,5 @@ var setupUserInterface = function() {
     calendarSurface.add(labelModifier).add(label);
   });
   // calendarFader is defined at the top of the file
-  mainContext.add(calendarFader).add(calendarSurface);
+  calendarNode = mainContext.add(calendarFader).add(calendarSurface);
 };
