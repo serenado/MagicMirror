@@ -10,16 +10,14 @@ var Draggable = famous.modifiers.Draggable;
 var Fader = famous.modifiers.Fader;
 var GridLayout = famous.views.GridLayout;
 
-
 var events = [];
 var eventModifiers = [];
-var tileModifiers = [];
 var calendarFader = new Fader();
 calendarFader.hide();
 var calendarOrigin = [70, 40];
 var labelWidth = 40;
 
-var background, otherFeedback, calendarContext, calendarNode;
+var background, otherFeedback, mainContext;
 
 // Engine.on('prerender', function() {
 //   console.log(Engine.getContexts().length);
@@ -93,8 +91,10 @@ var setupUserInterface = function() {
 
 // CALENDAR
 var drawCalendar = function() {
-  calendarContext = Engine.createContext();
-  var calendarSurface = new ContainerSurface();
+  events = []
+  eventModifiers = [];
+
+  calendarSurface = new ContainerSurface();
   EVENTS.forEach((e, i) => {
     var start = parseDateTime(e.start.dateTime);
     var end = parseDateTime(e.end.dateTime);
@@ -142,5 +142,5 @@ var drawCalendar = function() {
     calendarSurface.add(labelModifier).add(label);
   });
   // calendarFader is defined at the top of the file
-  calendarNode = calendarContext.add(calendarFader).add(calendarSurface);
+  mainContext.add(calendarFader).add(calendarSurface);
 }

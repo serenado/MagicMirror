@@ -134,7 +134,7 @@ function getEventsForToday() {
 	  'orderBy': 'startTime'
 	}).then(function(response) {
 	  EVENTS = response.result.items;
-	  redrawCalendar();
+	  redraw();
 	  console.log(EVENTS);
 });
 
