@@ -49,7 +49,9 @@ function updateSigninStatus(isSignedIn) {
 if (isSignedIn) {
   //listUpcomingEvents();
   // Update events on sign in
-   var EVENTS = getEventsForToday();
+   // var events = getEventsForToday();
+   // calendarView.set('events', events);
+   getEventsForToday();
 } else {
   console.log("not signed in yet");
 }
@@ -131,10 +133,10 @@ function getEventsForToday() {
 	  'singleEvents': true,
 	  'orderBy': 'startTime'
 	}).then(function(response) {
-	  var events = response.result.items;
-	  console.log(events)
-
-  	return events
+	  EVENTS = response.result.items;
+	  Engine.deregisterContext(mainContext);
+	  setupUserInterface();
+	  console.log(EVENTS);
 });
 
 }

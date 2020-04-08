@@ -10,6 +10,7 @@ var Draggable = famous.modifiers.Draggable;
 var Fader = famous.modifiers.Fader;
 var GridLayout = famous.views.GridLayout;
 
+
 var events = [];
 var eventModifiers = [];
 var tileModifiers = [];
@@ -18,11 +19,11 @@ calendarFader.hide();
 var calendarOrigin = [70, 40];
 var labelWidth = 40;
 
-var background, turnFeedback, otherFeedback;
+var background, otherFeedback, mainContext;
 
 // USER INTERFACE SETUP
 var setupUserInterface = function() {
-  var mainContext = Engine.createContext();
+  mainContext = Engine.createContext();
   background = new Surface({
     properties: {
       backgroundColor: "rgb(34, 34, 34)"
@@ -84,19 +85,20 @@ var setupUserInterface = function() {
 
   // Show the calendar
   var calendarSurface = new ContainerSurface();
-  EVENTS.forEach(e => {
+  EVENTS.forEach((e, i) => {
     var start = parseDateTime(e.start.dateTime);
     var end = parseDateTime(e.end.dateTime);
     var duration = getDuration(start, end);
     var size = [CALENDARWIDTH, HOURHEIGHT * duration - 2];
     var xpos = calendarOrigin[0];
     var ypos = calendarOrigin[1] + HOURHEIGHT * getDuration(new Time(CALENDAR_START), start);
+    var color = e.colorId == undefined ? Colors[(i % 4) + 1] : Colors[e.colorId];
 
     var event = new Surface({
       size: size,
       content: `<text style="font-family:verdana; font-size:10px; font-weight:bold">${e.summary}</text>`,
       properties: {
-          backgroundColor: Colors[e.colorId],
+          backgroundColor: color,
           color: "black",
           borderRadius: HOURHEIGHT/10 + 'px',
           paddingLeft: '5px',
