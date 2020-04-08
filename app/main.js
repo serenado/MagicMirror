@@ -5,6 +5,8 @@ var clock = new Clock();
 // UI SETUP
 setupUserInterface();
 
+var showingCalendar = false;
+
 // MAIN LOOP
 Leap.loop({ enableGestures: true},  function(frame) {
   clock.update();
@@ -12,7 +14,7 @@ Leap.loop({ enableGestures: true},  function(frame) {
   // Check if hand is active
   if (frame.hands.length > 0) {
     hand = frame.hands[0]
-    
+
     // Use the hand data to control the cursor's screen position
     cursorPosition = hand.screenPosition();
     cursorPosition[1] += 400;
@@ -62,8 +64,15 @@ var processSpeech = function(transcript) {
 
   var processed = false;
 
-  // Insert code for voice commands here
+  if (!showingCalendar && userSaid(transcript, ['calendar', 'schedule'])) {
+    showingCalendar = true;
+    showCalendar();
+  }
 
   return processed;
 };
 
+// CALENDAR DISPLAY
+var showCalendar = function() {
+  return
+};

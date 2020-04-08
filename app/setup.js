@@ -8,9 +8,11 @@ var StateModifier = famous.modifiers.StateModifier;
 var Draggable = famous.modifiers.Draggable;
 var GridLayout = famous.views.GridLayout;
 
-var tiles = [];
+var events = [];
+var eventModifiers = [];
 var tileModifiers = [];
-var gridOrigin = [350, 35];
+var calendarOrigin = [70, 40];
+var labelWidth = 40;
 
 var background, turnFeedback, otherFeedback;
 
@@ -60,18 +62,59 @@ var setupUserInterface = function() {
 
   // Indicate the current time
   var clockSurface = new Surface({
-    content: `<h1 style="font-family:verdana; font-size:500%;">00 : 00</h1> <h4 style="font-family:verdana;">Sunday, January 1, 2020</h4>`,
+    content: `<h1 style="font-family:verdana; font-size:500%; text-align:right;">00 : 00</h1> <h4 style="font-family:verdana; text-align: right;">Sunday, January 1, 2020</h4>`,
     properties : {
         color: "white",
-        paddingLeft: '20px'
+        paddingRight: '20px'
     }
   });
   var clockModifier = new Modifier({
     transform : function(){
       var time = this.get('time');
       var date = this.get('date');
-      clockSurface.setContent(`<h1 style="font-family:verdana; font-size:500%;">${time}</h1> <h4 style="font-family:verdana;">${date}</h4>`);
+      clockSurface.setContent(`<h1 style="font-family:verdana; font-size:500%; text-align:right;">${time}</h1> <h4 style="font-family:verdana; text-align:right;">${date}</h4>`);
     }.bind(clock)
   });
   mainContext.add(clockModifier).add(clockSurface);
+
+  // Show the calendar
+  EVENTS.forEach(e => {
+    var start = parseDateTime(e.start.dateTime);
+    var end = parseDateTime(e.end.dateTime);
+    var duration = getDuration(start, end);
+    var event = new Surface({
+      size: [CALENDARWIDTH, HOURHEIGHT * duration - 2],
+      properties: {
+          backgroundColor: Colors[e.colorId],
+          color: "white",
+          borderRadius: HOURHEIGHT/10 + 'px',
+      },
+    });
+    var transformModifier = new StateModifier({
+      transform: Transform.translate(calendarOrigin[0], calendarOrigin[1] + HOURHEIGHT * getDuration(CALENDAR_START, start), 0)
+    });
+    // TODO: fill in later
+    var eventModifier = new Modifier({
+    });
+    mainContext.add(transformModifier).add(eventModifier).add(event);
+    events.push(event);
+    eventModifiers.push(eventModifier);
+  });
+  HOURLABELS.forEach(function(hourLabel, i) {
+    var label = new Surface({
+        content: hourLabel,
+        size: [labelWidth, HOURHEIGHT],
+        properties: {
+          fontFamily: "verdana",
+          // textAlignVertical: "center",
+          textAlign: "right",
+          color: "white",
+          fontSize: "10px"
+        },
+    });
+    var labelModifier = new StateModifier({
+      transform: Transform.translate(calendarOrigin[0] - 50, calendarOrigin[1] + i * HOURHEIGHT - 5, 0)
+    });
+    mainContext.add(labelModifier).add(label);
+  });
 };
