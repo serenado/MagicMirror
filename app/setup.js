@@ -96,8 +96,14 @@ var drawCalendar = function() {
 
   calendarSurface = new ContainerSurface();
   EVENTS.forEach((e, i) => {
-    var start = parseDateTime(e.start.dateTime);
-    var end = parseDateTime(e.end.dateTime);
+    // check if all day event
+    if (e.start.dateTime != null) {
+      var start = parseDateTime(e.start.dateTime);
+      var end = parseDateTime(e.end.dateTime);
+    } else {
+      var start = parseDateTime(e.start.date);
+      var end = parseDateTime(e.end.date);
+    }
     var duration = getDuration(start, end);
     var size = [CALENDARWIDTH, HOURHEIGHT * duration - 2];
     var xpos = calendarOrigin[0];

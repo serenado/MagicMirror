@@ -3,9 +3,16 @@ var parseDateTime = function(dateTime) {
   var year = parseInt(dateTime.slice(0, 4));
   var month = parseInt(dateTime.slice(5, 7));
   var day = parseInt(dateTime.slice(8, 10));
-  var hour = parseInt(dateTime.slice(11, 13));
-  var minute = parseInt(dateTime.slice(14, 16));
-  var second = parseInt(dateTime.slice(17, 19));
+
+  var hour = 0;
+  var minute = 0;
+  var second = 0;
+  // stop if event is all day
+  if (dateTime.length > 10) {
+    hour = parseInt(dateTime.slice(11, 13));
+    minute = parseInt(dateTime.slice(14, 16));
+    second = parseInt(dateTime.slice(17, 19));
+  }
   return new Time({
     year: year,
     month: month,

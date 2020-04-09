@@ -51,7 +51,7 @@ if (isSignedIn) {
   // Update events on sign in
    // var events = getEventsForToday();
    // calendarView.set('events', events);
-   getEventsForToday();
+   getCalendars(getEventsForToday);
 } else {
   console.log("not signed in yet");
 }
