@@ -43,6 +43,17 @@ var unhilightEvent = function(event) {
   event.get('surface').setProperties({border: ""});
 }
 
+// show event details panel
+var showEventDetails = function(event) {
+  eventDetails.update(event);
+  eventDetailsFader.show();
+}
+
+// hide event details panel
+var hideEventDetails = function() {
+  eventDetailsFader.hide();
+}
+
 // removes old context and redraws everything
 var redraw = function() {
   Engine.deregisterContext(mainContext);

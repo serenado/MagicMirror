@@ -1,9 +1,12 @@
 // SETUP
 var cursor = new Cursor();
 var clock = new Clock();
+var eventDetails = new Event();
 
 // UI SETUP
 setupUserInterface();
+
+if (AUTOSHOW) { calendarFader.show(); }
 
 var hoveredEvent = false;
 
@@ -93,12 +96,22 @@ var processSpeech = function(transcript) {
 
   var processed = false;
 
-  if (userSaid(transcript, ['calendar', 'schedule'])) {
-    if (calendarFader.isVisible()) {
-      calendarFader.hide();
-    } else {
-      calendarFader.show();
-    }
+  // show calendar
+  if (!calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
+        && userSaid(transcript, ['show', 'what', 'what\'s'])) {
+    calendarFader.show();
+  }
+
+  // hide calendar
+  else if (calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
+        && userSaid(transcript, ['hide', 'close'])) {
+    calendarFader.hide();
+  }
+
+  // see event details
+  else if (calendarFader.isVisible() && hoveredEvent && userSaid(transcript, ['see more', 'Seymour', 'details'])) {
+    console.log('SHOW DETAILS', hoveredEvent.get('data').summary);
+    showEventDetails(hoveredEvent);
   }
 
   // TODO : have a global variable that keeps track of the logged in state
