@@ -83,62 +83,6 @@ function appendPre(message) {
 	pre.appendChild(textContent);
 }
 
-/**
-* Print the summary and start datetime/date of the next ten events in
-* the authorized user's calendar. If no events are found an
-* appropriate message is printed.
-*/
-function listUpcomingEvents() {
-	gapi.client.calendar.events.list({
-	  'calendarId': 'primary',
-	  'timeMin': (new Date()).toISOString(),
-	  'showDeleted': false,
-	  'singleEvents': true,
-	  'maxResults': 10,
-	  'orderBy': 'startTime'
-	}).then(function(response) {
-	  var events = response.result.items;
-	  appendPre('Upcoming events:');
-
-	  if (events.length > 0) {
-	    for (i = 0; i < events.length; i++) {
-	      var event = events[i];
-	      var when = event.start.dateTime;
-	      if (!when) {
-	        when = event.start.date;
-	      }
-	      console.log(event.summary + ' (' + when + ')')
-	      appendPre(event.summary + ' (' + when + ')')
-	    }
-	  } else {
-	    appendPre('No upcoming events found.');
-	  }
-	});
-}
-
-/**
-* Queries for list of events happening today in the user's calendar.
-* Returns the list of events for the current day.
-*/
-function getEventsForToday() {
-	var start = new Date();
-	start.setHours(0,0,0,0);
-	var end = new Date();
-	end.setHours(23,59,59,999);
-	gapi.client.calendar.events.list({
-	  'calendarId': 'primary',
-	  'timeMin': (start.toISOString()),
-	  'timeMax': (end.toISOString()),
-	  'showDeleted': false,
-	  'singleEvents': true,
-	  'orderBy': 'startTime'
-	}).then(function(response) {
-	  EVENTS = response.result.items;
-	  redraw();
-	  console.log(EVENTS);
-});
-
-}
 
 
 
