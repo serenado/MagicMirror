@@ -4,9 +4,9 @@ var parseDateTime = function(dateTime) {
   var month = parseInt(dateTime.slice(5, 7));
   var day = parseInt(dateTime.slice(8, 10));
 
-  var hour = 0;
-  var minute = 0;
-  var second = 0;
+  var hour = null;
+  var minute = null;
+  var second = null;
   // stop if event is all day
   if (dateTime.length > 10) {
     hour = parseInt(dateTime.slice(11, 13));

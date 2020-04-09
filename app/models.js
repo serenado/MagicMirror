@@ -37,8 +37,8 @@ var Time = Backbone.Model.extend({
 
 var Event = Backbone.Model.extend({
   defaults: {
-    start: new Time(),
-    end: new Time(),
+    start: new Time(),  // null means all day event
+    end: new Time(),    // null means all day event
     size: [0, 0],
     pos: [0, 0],
     data: null,

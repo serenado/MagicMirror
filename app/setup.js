@@ -99,18 +99,23 @@ var drawCalendar = function() {
 
   var calendarSurface = new ContainerSurface();
   EVENTS.forEach((e, i) => {
+    var size, ypos;
+    var xpos = calendarOrigin[0];
+    var start = null;
+    var end = null;
+
     // check if all day event
     if (e.start.dateTime != null) {
-      var start = parseDateTime(e.start.dateTime);
-      var end = parseDateTime(e.end.dateTime);
-    } else {
-      var start = parseDateTime(e.start.date);
-      var end = parseDateTime(e.end.date);
+      start = parseDateTime(e.start.dateTime);
+      end = parseDateTime(e.end.dateTime);
+      var duration = getDuration(start, end);
+      size = [CALENDARWIDTH, HOURHEIGHT * duration - 2];
+      ypos = calendarOrigin[1] + HOURHEIGHT * (1 + getDuration(new Time(CALENDAR_START), start));
+      
+    } else { // all day event
+      size = [CALENDARWIDTH, HOURHEIGHT * 0.4];
+      ypos = calendarOrigin[1]
     }
-    var duration = getDuration(start, end);
-    var size = [CALENDARWIDTH, HOURHEIGHT * duration - 2];
-    var xpos = calendarOrigin[0];
-    var ypos = calendarOrigin[1] + HOURHEIGHT * getDuration(new Time(CALENDAR_START), start);
     var color = e.colorId == undefined ? Colors[(i % 4) + 1] : Colors[e.colorId];
 
     var event = new Surface({
@@ -180,7 +185,11 @@ var drawEventDetails = function() {
       var description = '';
       if (this.get('data')) {
         summary = this.get('data').summary;
-        time = this.get('start').format() + ' - ' + this.get('end').format();
+        if (this.get('start')) {
+          time = this.get('start').format() + ' - ' + this.get('end').format();
+        } else {
+          time = 'All day'
+        }
         if (this.get('data').location) {
           location = this.get('data').location;
         }
@@ -223,9 +232,15 @@ var drawEventDetails = function() {
       var ypos = calendarOrigin[1];
       if (this.get('data')) {
         // calculate center of event in y-direction
-        var duration = getDuration(this.get('start'), this.get('end'));
+        var duration, ystart;
+        if (this.get('start')) {
+          duration = getDuration(this.get('start'), this.get('end'));
+          ystart = calendarOrigin[1] + HOURHEIGHT * getDuration(new Time(CALENDAR_START), this.get('start'))
+        } else { // all day event
+          duration = 0.4;
+          ystart = calendarOrigin[1];
+        }
         var size = [CALENDARWIDTH, HOURHEIGHT * duration - 2];
-        var ystart = calendarOrigin[1] + HOURHEIGHT * getDuration(new Time(CALENDAR_START), this.get('start'))
         ypos = ystart + (HOURHEIGHT * duration / 2) - (pointerSize[1] / 2);
       }
       return Transform.translate(xpos - pointerSize[0], ypos, 0);
