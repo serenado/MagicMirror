@@ -104,7 +104,7 @@ var processSpeech = function(transcript) {
 
   // hide calendar
   else if (calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
-        && userSaid(transcript, H)) {
+        && userSaid(transcript, ['hide', 'close'])) {
     hideCalendar();
   }
 
