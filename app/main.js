@@ -6,7 +6,7 @@ var eventDetails = new Event();
 // UI SETUP
 setupUserInterface();
 
-if (AUTOSHOW) { calendarFader.show(); }
+if (AUTOSHOW) { showCalendar(); }
 
 var hoveredEvent = false;
 
@@ -64,7 +64,7 @@ Leap.loop({ enableGestures: true},  function(frame) {
             } else { //vertical
               if(gesture.direction[1] > 0) { // up
                 if (calendarFader.isVisible()) {
-                  calendarFader.hide();
+                  hideCalendar();
                 }
               } else { // down
                 
@@ -99,13 +99,13 @@ var processSpeech = function(transcript) {
   // show calendar
   if (!calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
         && userSaid(transcript, ['show', 'what', 'what\'s'])) {
-    calendarFader.show();
+    showCalendar();
   }
 
   // hide calendar
   else if (calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
-        && userSaid(transcript, ['hide', 'close'])) {
-    calendarFader.hide();
+        && userSaid(transcript, H)) {
+    hideCalendar();
   }
 
   // see event details

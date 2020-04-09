@@ -41,18 +41,27 @@ var highlightEvent = function(event) {
 // unhilight event
 var unhilightEvent = function(event) {
   event.get('surface').setProperties({border: ""});
-}
+};
+
+var showCalendar = function() {
+  calendarFader.show();
+};
+
+var hideCalendar = function() {
+  calendarFader.hide();
+  eventDetailsFader.hide();
+};
 
 // show event details panel
 var showEventDetails = function(event) {
   eventDetails.update(event);
   eventDetailsFader.show();
-}
+};
 
 // hide event details panel
 var hideEventDetails = function() {
   eventDetailsFader.hide();
-}
+};
 
 // removes old context and redraws everything
 var redraw = function() {
