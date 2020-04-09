@@ -21,3 +21,4 @@ var HOURLABELS = [ "10 AM", "11 AM", "Noon", "1 PM", "2 PM", "3 PM", "4 PM", "5 
 var VOICEINDEX = 2; // UK British Female
 var LEAPSCALE = 0.6;
 var DEBUGSPEECH = true;
+var AUTOSHOW = true;

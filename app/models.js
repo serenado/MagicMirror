@@ -30,6 +30,9 @@ var Time = Backbone.Model.extend({
     minute: 0,
     second: 0
   },
+  format: function() {
+    return ("00" + this.get('hour')).slice(-2) + ":" + ("00" + this.get('minute')).slice(-2);
+  },
 });
 
 var Event = Backbone.Model.extend({
@@ -45,4 +48,12 @@ var Event = Backbone.Model.extend({
     return screenPosition[0] >= this.get('pos')[0] && screenPosition[0] <= this.get('pos')[0] + this.get('size')[0]
       && screenPosition[1] >= this.get('pos')[1] && screenPosition[1] <= this.get('pos')[1] + this.get('size')[1];
   },
+  update: function(that) {  // resets all properties to match that, used to update event details panel
+    this.set('start', that.get('start'));
+    this.set('end', that.get('end'));
+    this.set('size', that.get('size'));
+    this.set('pos', that.get('pos'));
+    this.set('data', that.get('data'));
+    this.set('surface', that.get('surface'));
+  }
 });
