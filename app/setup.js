@@ -98,6 +98,8 @@ var drawCalendar = function() {
   eventModifiers = [];
 
   var calendarSurface = new ContainerSurface();
+
+  // draw events
   EVENTS.forEach((e, i) => {
     var size, ypos;
     var xpos = calendarOrigin[0];
@@ -109,11 +111,11 @@ var drawCalendar = function() {
       start = parseDateTime(e.start.dateTime);
       end = parseDateTime(e.end.dateTime);
       var duration = getDuration(start, end);
-      size = [CALENDARWIDTH, HOURHEIGHT * duration - 2];
-      ypos = calendarOrigin[1] + HOURHEIGHT * (1 + getDuration(new Time(CALENDAR_START), start));
+      size = [CALENDARWIDTH, HOURHEIGHT * duration - 3];
+      ypos = 2 + calendarOrigin[1] + HOURHEIGHT * (1 + getDuration(new Time(CALENDAR_START), start));
       
     } else { // all day event
-      size = [CALENDARWIDTH, HOURHEIGHT * 0.4];
+      size = [CALENDARWIDTH, HOURHEIGHT * 0.5 - 2];
       ypos = calendarOrigin[1]
     }
     var color = e.colorId == undefined ? Colors[(i % 4) + 1] : Colors[e.colorId];
@@ -139,7 +141,25 @@ var drawCalendar = function() {
     events.push(new Event({ start, end, size, pos: [xpos, ypos], data: e, surface: event }));
     eventModifiers.push(eventModifier);
   });
-  HOURLABELS.forEach(function(hourLabel, i) {
+
+  // draw all day label
+  var label = new Surface({
+      content: HOURLABELS[0],
+      size: [labelWidth, HOURHEIGHT],
+      properties: {
+        fontFamily: "verdana",
+        textAlign: "right",
+        color: "white",
+        fontSize: "10px"
+      },
+  });
+  var labelModifier = new StateModifier({
+    transform: Transform.translate(calendarOrigin[0] - 50, calendarOrigin[1] + 6, 0)
+  });
+  calendarSurface.add(labelModifier).add(label);
+
+  // draw time labels
+  HOURLABELS.slice(1).forEach(function(hourLabel, i) {
     var label = new Surface({
         content: hourLabel,
         size: [labelWidth, HOURHEIGHT],
@@ -151,10 +171,38 @@ var drawCalendar = function() {
         },
     });
     var labelModifier = new StateModifier({
-      transform: Transform.translate(calendarOrigin[0] - 50, calendarOrigin[1] + i * HOURHEIGHT - 5, 0)
+      transform: Transform.translate(calendarOrigin[0] - 50, calendarOrigin[1] + (i + 1) * HOURHEIGHT - 6, 0)
     });
     calendarSurface.add(labelModifier).add(label);
   });
+
+  // draw horizontal lines for each hour
+  for (var i = 1; i <= 9; i++) {
+    var line = new Surface({
+        size: [CALENDARWIDTH, 1],
+        properties: {
+          backgroundColor: "rgb(150, 150, 150)",
+        }
+    });
+    var lineModifier = new StateModifier({
+      transform: Transform.translate(calendarOrigin[0], calendarOrigin[1] + i * HOURHEIGHT, 0),
+      opacity: 0.6,
+    });
+    calendarSurface.add(lineModifier).add(line);
+  };
+
+  // draw thicker horizontal line to separate all-day events
+  var line = new Surface({
+      size: [CALENDARWIDTH + 50, 2],
+      properties: {
+        backgroundColor: "rgb(150, 150, 150)",
+      }
+  });
+  var lineModifer = new StateModifier({
+    transform: Transform.translate(calendarOrigin[0] - 50, calendarOrigin[1] + HOURHEIGHT * 0.5, 0),
+  })
+  calendarSurface.add(lineModifer).add(line);
+
   // calendarFader is defined at the top of the file
   mainContext.add(calendarFader).add(calendarSurface);
 };
@@ -165,7 +213,7 @@ var drawEventDetails = function() {
 
   // draw the main event details panel
   var details = new Surface({
-    size: [CALENDARWIDTH * 1.5, HOURHEIGHT * 8],
+    size: [CALENDARWIDTH * 1.5, HOURHEIGHT * 9],
     properties: {
         backgroundColor: "rgb(64, 64, 64)",
         color: "white",
@@ -235,7 +283,7 @@ var drawEventDetails = function() {
         var duration, ystart;
         if (this.get('start')) {
           duration = getDuration(this.get('start'), this.get('end'));
-          ystart = calendarOrigin[1] + HOURHEIGHT * getDuration(new Time(CALENDAR_START), this.get('start'))
+          ystart = calendarOrigin[1] + HOURHEIGHT * (1 + getDuration(new Time(CALENDAR_START), this.get('start')));
         } else { // all day event
           duration = 0.4;
           ystart = calendarOrigin[1];
