@@ -12,9 +12,13 @@ var GridLayout = famous.views.GridLayout;
 
 var events = [];
 var eventModifiers = [];
+var eventsTomorrow = [];
+var eventModifiersTomorrow = [];
 var calendarFader = new Fader();
+var calendarTomorrowFader = new Fader();
+var calendarLabelsFader = new Fader();
 var eventDetailsFader = new Fader();
-var calendarOrigin = [70, 40];
+var calendarOrigin = [70, 70];
 var labelWidth = 40;
 
 var background, otherFeedback, mainContext;
@@ -43,7 +47,7 @@ var setupUserInterface = function() {
     }
   });
   var otherModifier = new StateModifier({
-    origin: [0.0, 1.0],
+    origin: [0.0, 0.5],
     align: [0.0, 1.0]
   })
   mainContext.add(otherModifier).add(otherFeedback);
@@ -85,22 +89,41 @@ var setupUserInterface = function() {
   });
   mainContext.add(clockModifier).add(clockSurface);
 
-  // Draw the calendar
-  drawCalendar();
+  // Draw the calendar for today
+  drawCalendar(calendarFader, EVENTS, events, eventModifiers, 'Today');
+
+  // Draw the calendar for tomorrow
+  drawCalendar(calendarTomorrowFader, TOMORROW_EVENTS, eventsTomorrow, eventModifiersTomorrow, 'Tomorrow');
+
+  // Draw the calendar lines and labels
+  drawCalendarLabels();
 
   // Draw event details panel
   drawEventDetails();
 };
 
 // CALENDAR
-var drawCalendar = function() {
-  events = []
-  eventModifiers = [];
-
+var drawCalendar = function(fader, eventData, evts, mods, labelText) {
   var calendarSurface = new ContainerSurface();
 
+  // draw label
+  var label = new Surface({
+      content: labelText,
+      size: [CALENDARWIDTH, 30],
+      properties: {
+        fontFamily: "verdana",
+        textAlign: "center",
+        color: "white",
+        fontSize: "25px"
+      },
+  });
+  var labelModifier = new StateModifier({
+    transform: Transform.translate(calendarOrigin[0], 20, 0)
+  });
+  calendarSurface.add(labelModifier).add(label);
+
   // draw events
-  EVENTS.forEach((e, i) => {
+  eventData.forEach((e, i) => {
     var size, ypos;
     var xpos = calendarOrigin[0];
     var start = null;
@@ -138,9 +161,15 @@ var drawCalendar = function() {
     var eventModifier = new Modifier({
     });
     calendarSurface.add(transformModifier).add(eventModifier).add(event);
-    events.push(new Event({ start, end, size, pos: [xpos, ypos], data: e, surface: event }));
-    eventModifiers.push(eventModifier);
+    evts.push(new Event({ start, end, size, pos: [xpos, ypos], data: e, surface: event }));
+    mods.push(eventModifier);
   });
+
+  mainContext.add(fader).add(calendarSurface);
+};
+
+var drawCalendarLabels = function() {
+  var calendarSurface = new ContainerSurface();
 
   // draw all day label
   var label = new Surface({
@@ -203,9 +232,8 @@ var drawCalendar = function() {
   })
   calendarSurface.add(lineModifer).add(line);
 
-  // calendarFader is defined at the top of the file
-  mainContext.add(calendarFader).add(calendarSurface);
-};
+  mainContext.add(calendarLabelsFader).add(calendarSurface);
+}
 
 // EVENT DETAILS
 var drawEventDetails = function() {

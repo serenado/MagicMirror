@@ -9,12 +9,14 @@ setupUserInterface();
 if (AUTOSHOW) { showCalendar(); }
 
 var hoveredEvent = false;
+var activeCalendar = 'today';
+var activeEvents = events;
 
 // MAIN LOOP
 Leap.loop({ enableGestures: true},  function(frame) {
   // things that should happen every frame
   clock.update();
-  events.forEach(event => {
+  activeEvents.forEach(event => {
     unhilightEvent(event);
   });
 
@@ -28,7 +30,7 @@ Leap.loop({ enableGestures: true},  function(frame) {
     cursor.setScreenPosition(cursorPosition);
 
     // highlight hovered event
-    if (calendarFader.isVisible()) {
+    if (isCalendarShowing()) {
       hoveredEvent = getIntersectingEvent(cursorPosition);
       if (hoveredEvent) {
         highlightEvent(hoveredEvent);
@@ -57,16 +59,22 @@ Leap.loop({ enableGestures: true},  function(frame) {
             //Classify as right-left or up-down
             if(isHorizontal) {
               if(gesture.direction[0] > 0) { // swipe right
-                
+                // show today's calendar
+                if (isCalendarShowing() && activeCalendar === 'tomorrow') {
+                  showToday();
+                }
               } else { // swipe left
-                
+                // show tomorrow's calendar
+                if (isCalendarShowing() && activeCalendar === 'today') {
+                  showTomorrow();
+                }
               }
             } else { //vertical
               if(gesture.direction[1] > 0) { // swipe up
                 // if hovering over event details, close event details
-                if (eventDetailsFader.isVisible() && cursorPosition[0] > calendarOrigin[0] + CALENDARWIDTH) {
+                if (isEventDetailsShowing() && cursorPosition[0] > calendarOrigin[0] + CALENDARWIDTH) {
                   hideEventDetails();
-                } else if (calendarFader.isVisible()) { // if hovering over calendar, close calendar
+                } else if (isCalendarShowing()) { // if hovering over calendar, close calendar
                   hideCalendar();
                 }
               } else { // swipe down
@@ -100,25 +108,35 @@ var processSpeech = function(transcript) {
   var processed = false;
 
   // show calendar
-  if (!calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
+  if (!isCalendarShowing() && userSaid(transcript, ['calendar', 'schedule']) 
         && userSaid(transcript, ['show', 'what', 'what\'s'])) {
     showCalendar();
     processed = true;
   }
 
   // hide calendar
-  else if (calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
+  else if (isCalendarShowing() && userSaid(transcript, ['calendar', 'schedule']) 
         && userSaid(transcript, ['hide', 'close'])) {
     hideCalendar();
     processed = true;
   }
 
+  // show tomorrow's calendar
+  else if (isCalendarShowing() && activeCalendar === 'today' && userSaid(transcript, ['tomorrow'])) {
+    showTomorrow();
+  }
+
+  // show today's calendar
+  else if (isCalendarShowing() && activeCalendar === 'tomorrow' && userSaid(transcript, ['today'])) {
+    showToday();
+  }
+
   // see event details
-  else if (calendarFader.isVisible() && userSaid(transcript, ['see more', 'seymour', 'details', 'detail'])
+  else if (isCalendarShowing() && userSaid(transcript, ['see more', 'seymour', 'details', 'detail'])
         && !userSaid(transcript, ['hide', 'close'])) {
     voiceOnly = false;
     // see if user said an event name
-    events.forEach(event => {
+    activeEvents.forEach(event => {
       if (userSaid(transcript, [event.get('data').summary])) {
         voiceOnly = true;
         showEventDetails(event);
@@ -133,7 +151,7 @@ var processSpeech = function(transcript) {
   }
 
   // hide event details
-  else if (eventDetailsFader.isVisible() && userSaid(transcript, ['details', 'detail']) 
+  else if (isEventDetailsShowing() && userSaid(transcript, ['details', 'detail']) 
         && userSaid(transcript, ['hide', 'close'])) {
     hideEventDetails();
     processed = true;

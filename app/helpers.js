@@ -32,7 +32,7 @@ var getDuration = function(start, end) {
 // gets event being hovered over, returns false if none
 var getIntersectingEvent = function(screenPosition) {
   var intersectingEvent = false
-  events.forEach(event => {
+  activeEvents.forEach(event => {
     if (event.isIntersecting(screenPosition)) {
       intersectingEvent = event;
     }
@@ -50,14 +50,39 @@ var unhilightEvent = function(event) {
   event.get('surface').setProperties({border: ""});
 };
 
+var isCalendarShowing = function() {
+  return calendarLabelsFader.isVisible();
+}
+
 var showCalendar = function() {
   calendarFader.show();
+  calendarLabelsFader.show();
 };
+
+var showToday = function() {
+  calendarTomorrowFader.hide();
+  calendarFader.show();
+  activeCalendar = 'today';
+  activeEvents = events;
+}
+
+var showTomorrow = function() {
+  calendarFader.hide();
+  calendarTomorrowFader.show();
+  activeCalendar = 'tomorrow';
+  activeEvents = eventsTomorrow;
+}
 
 var hideCalendar = function() {
   calendarFader.hide();
+  calendarTomorrowFader.hide();
+  calendarLabelsFader.hide();
   eventDetailsFader.hide();
 };
+
+var isEventDetailsShowing = function() {
+  return eventDetailsFader.isVisible();
+}
 
 // show event details panel
 var showEventDetails = function(event) {
