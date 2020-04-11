@@ -56,17 +56,20 @@ Leap.loop({ enableGestures: true},  function(frame) {
             var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
             //Classify as right-left or up-down
             if(isHorizontal) {
-              if(gesture.direction[0] > 0) { // right
+              if(gesture.direction[0] > 0) { // swipe right
                 
-              } else { // left
+              } else { // swipe left
                 
               }
             } else { //vertical
-              if(gesture.direction[1] > 0) { // up
-                if (calendarFader.isVisible()) {
+              if(gesture.direction[1] > 0) { // swipe up
+                // if hovering over event details, close event details
+                if (eventDetailsFader.isVisible() && cursorPosition[0] > calendarOrigin[0] + CALENDARWIDTH) {
+                  hideEventDetails();
+                } else if (calendarFader.isVisible()) { // if hovering over calendar, close calendar
                   hideCalendar();
                 }
-              } else { // down
+              } else { // swipe down
                 
               }                  
             }
@@ -88,7 +91,7 @@ var processSpeech = function(transcript) {
   // Helper function to detect if any commands appear in a string
   var userSaid = function(str, commands) {
     for (var i = 0; i < commands.length; i++) {
-      if (str.indexOf(commands[i]) > -1)
+      if (str.toLowerCase().indexOf(commands[i].toLowerCase()) > -1)
         return true;
     }
     return false;
@@ -100,23 +103,46 @@ var processSpeech = function(transcript) {
   if (!calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
         && userSaid(transcript, ['show', 'what', 'what\'s'])) {
     showCalendar();
+    processed = true;
   }
 
   // hide calendar
   else if (calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
         && userSaid(transcript, ['hide', 'close'])) {
     hideCalendar();
+    processed = true;
   }
 
   // see event details
-  else if (calendarFader.isVisible() && hoveredEvent && userSaid(transcript, ['see more', 'Seymour', 'details'])) {
-    console.log('SHOW DETAILS', hoveredEvent.get('data').summary);
-    showEventDetails(hoveredEvent);
+  else if (calendarFader.isVisible() && userSaid(transcript, ['see more', 'seymour', 'details', 'detail'])
+        && !userSaid(transcript, ['hide', 'close'])) {
+    voiceOnly = false;
+    // see if user said an event name
+    events.forEach(event => {
+      if (userSaid(transcript, [event.get('data').summary])) {
+        voiceOnly = true;
+        showEventDetails(event);
+        processed = true;
+      }
+    });
+    // check if user is using a point-and-say command
+    if (!voiceOnly && hoveredEvent) {     
+      showEventDetails(hoveredEvent);
+      processed = true;
+    }
+  }
+
+  // hide event details
+  else if (eventDetailsFader.isVisible() && userSaid(transcript, ['details', 'detail']) 
+        && userSaid(transcript, ['hide', 'close'])) {
+    hideEventDetails();
+    processed = true;
   }
 
   // TODO : have a global variable that keeps track of the logged in state
   else if (userSaid(transcript, ['login'])) {
     handleAuthClick();
+    processed = true;
   }
 
   return processed;
