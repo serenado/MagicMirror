@@ -9,12 +9,14 @@ setupUserInterface();
 if (AUTOSHOW) { showCalendar(); }
 
 var hoveredEvent = false;
+var activeCalendar = 'today';
+var activeEvents = events;
 
 // MAIN LOOP
 Leap.loop({ enableGestures: true},  function(frame) {
   // things that should happen every frame
   clock.update();
-  events.forEach(event => {
+  activeEvents.forEach(event => {
     unhilightEvent(event);
   });
 
@@ -28,7 +30,7 @@ Leap.loop({ enableGestures: true},  function(frame) {
     cursor.setScreenPosition(cursorPosition);
 
     // highlight hovered event
-    if (calendarFader.isVisible()) {
+    if (isCalendarShowing()) {
       hoveredEvent = getIntersectingEvent(cursorPosition);
       if (hoveredEvent) {
         highlightEvent(hoveredEvent);
@@ -56,17 +58,26 @@ Leap.loop({ enableGestures: true},  function(frame) {
             var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
             //Classify as right-left or up-down
             if(isHorizontal) {
-              if(gesture.direction[0] > 0) { // right
-                
-              } else { // left
-                
+              if(gesture.direction[0] > 0) { // swipe right
+                // show today's calendar
+                if (isCalendarShowing() && activeCalendar === 'tomorrow') {
+                  showToday();
+                }
+              } else { // swipe left
+                // show tomorrow's calendar
+                if (isCalendarShowing() && activeCalendar === 'today') {
+                  showTomorrow();
+                }
               }
             } else { //vertical
-              if(gesture.direction[1] > 0) { // up
-                if (calendarFader.isVisible()) {
+              if(gesture.direction[1] > 0) { // swipe up
+                // if hovering over event details, close event details
+                if (isEventDetailsShowing() && cursorPosition[0] > calendarOrigin[0] + CALENDARWIDTH) {
+                  hideEventDetails();
+                } else if (isCalendarShowing()) { // if hovering over calendar, close calendar
                   hideCalendar();
                 }
-              } else { // down
+              } else { // swipe down
                 
               }                  
             }
@@ -88,7 +99,7 @@ var processSpeech = function(transcript) {
   // Helper function to detect if any commands appear in a string
   var userSaid = function(str, commands) {
     for (var i = 0; i < commands.length; i++) {
-      if (str.indexOf(commands[i]) > -1)
+      if (str.toLowerCase().indexOf(commands[i].toLowerCase()) > -1)
         return true;
     }
     return false;
@@ -97,21 +108,53 @@ var processSpeech = function(transcript) {
   var processed = false;
 
   // show calendar
-  if (!calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
+  if (!isCalendarShowing() && userSaid(transcript, ['calendar', 'schedule']) 
         && userSaid(transcript, ['show', 'what', 'what\'s'])) {
     showCalendar();
+    processed = true;
   }
 
   // hide calendar
-  else if (calendarFader.isVisible() && userSaid(transcript, ['calendar', 'schedule']) 
+  else if (isCalendarShowing() && userSaid(transcript, ['calendar', 'schedule']) 
         && userSaid(transcript, ['hide', 'close'])) {
     hideCalendar();
+    processed = true;
+  }
+
+  // show tomorrow's calendar
+  else if (isCalendarShowing() && activeCalendar === 'today' && userSaid(transcript, ['tomorrow'])) {
+    showTomorrow();
+  }
+
+  // show today's calendar
+  else if (isCalendarShowing() && activeCalendar === 'tomorrow' && userSaid(transcript, ['today'])) {
+    showToday();
   }
 
   // see event details
-  else if (calendarFader.isVisible() && hoveredEvent && userSaid(transcript, ['see more', 'Seymour', 'details'])) {
-    console.log('SHOW DETAILS', hoveredEvent.get('data').summary);
-    showEventDetails(hoveredEvent);
+  else if (isCalendarShowing() && userSaid(transcript, ['see more', 'seymour', 'details', 'detail'])
+        && !userSaid(transcript, ['hide', 'close'])) {
+    voiceOnly = false;
+    // see if user said an event name
+    activeEvents.forEach(event => {
+      if (userSaid(transcript, [event.get('data').summary])) {
+        voiceOnly = true;
+        showEventDetails(event);
+        processed = true;
+      }
+    });
+    // check if user is using a point-and-say command
+    if (!voiceOnly && hoveredEvent) {     
+      showEventDetails(hoveredEvent);
+      processed = true;
+    }
+  }
+
+  // hide event details
+  else if (isEventDetailsShowing() && userSaid(transcript, ['details', 'detail']) 
+        && userSaid(transcript, ['hide', 'close'])) {
+    hideEventDetails();
+    processed = true;
   }
 
   // TODO : have a global variable that keeps track of the logged in state
@@ -164,6 +207,7 @@ var processSpeech = function(transcript) {
     var newEvent = makeEvent("New Event", startTime, endTime);
     insertEvent(newEvent);
     processed = true;
+
   }
 
   return processed;
