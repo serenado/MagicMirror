@@ -117,6 +117,53 @@ var processSpeech = function(transcript) {
   // TODO : have a global variable that keeps track of the logged in state
   else if (userSaid(transcript, ['login'])) {
     handleAuthClick();
+    processed = true;
+  }
+
+  // add a new event
+  else if (userSaid(transcript, ['make', 'schedule', 'create', 'meeting', 'class', 'interview', 'event', 'appointment'])) {
+    console.log("making event");
+
+    var startTime, endTime;
+
+    var atIndex = transcript.indexOf("at");
+    var fromIndex = transcript.indexOf("from");
+    var tokens = transcript.split(" ");
+    if (atIndex != -1) {
+
+      var timeString = tokens[tokens.indexOf("at")+1];
+      startTime = interpretTimeInput(timeString);
+
+      // makes event, assumes 1 hour duration 
+      endTime = new Date();
+      endTime.setHours(startTime.getHours() + 1);
+      endTime.setMinutes(startTime.getMinutes());
+
+    } else if (fromIndex != -1) {
+      var startString = tokens[tokens.indexOf("from")+1];
+      var startTime = interpretTimeInput(startString);
+
+      var endIndex = -1;
+      var endOptions = ["until", "till", "to"];
+      for (var i = 0; i < endOptions.length; i++) {
+        if (tokens.indexOf(endOptions[i]) > -1) {
+          endIndex = tokens.indexOf(endOptions[i]);
+        }
+      }
+
+      if (endIndex == -1) {
+        endTime = new Date();
+        endTime.setHours(startTime.getHours() + 1);
+        endTime.setMinutes(startTime.getMinutes());      
+      } else {
+        var endString = tokens[endIndex + 1];
+      }
+      endTime = interpretTimeInput(endString);
+    }
+
+    var newEvent = makeEvent("New Event", startTime, endTime);
+    insertEvent(newEvent);
+    processed = true;
   }
 
   return processed;

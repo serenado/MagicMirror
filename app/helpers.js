@@ -23,6 +23,47 @@ var parseDateTime = function(dateTime) {
   });
 };
 
+// takes in string representing time (as 0:00 or as 0000) and returns Time object representing that time
+// Assume only working with 10am to 6pm time frame
+var interpretTimeInput = function(timeString) {
+  var t = new Date();
+  t.setHours(0,0,0,0);
+  var hours = 0;
+  var minutes = 0;
+
+  if (timeString == "noon") {
+    t.setHours(12);
+    return t;
+  }
+
+  var colon = timeString.indexOf(":");
+  if (colon != -1) {
+    hours = parseInt(timeString.substring(0, colon));
+    if (hours < 10) {
+      hours += 12;
+    }
+    minutes = parseInt(timeString.substring(colon+1));
+  } else {
+    if (timeString.length <= 2) {
+      hours = parseInt(timeString);
+      if (hours < 10) {
+        hours += 12;
+      } 
+    } else {
+      var hourLength = timeString.length - 2;
+      hours = parseInt(timeString.substring(0, hourLength));
+      if (hours < 10) {
+        hours += 12;
+      }
+      minutes = parseInt(timeString.substring(hourLength));
+    }
+  }
+  t.setHours(hours);
+  t.setMinutes(minutes);
+  return t;
+}
+
+
 // gets duration in hours where start and end are Time objects
 // start should be before end
 var getDuration = function(start, end) {

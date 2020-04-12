@@ -46,3 +46,47 @@ function getEventsForToday(ids) {
 	});
 }
 
+/** 
+* Given an event, makes a request to insert the event into the user's calendar and then redraws.
+* Defaults to 'primary' calendar.
+*/
+function insertEvent(event, calendarID = "primary") {
+	gapi.client.calendar.events.insert({
+		'calendarId': calendarID,
+		'resource': event
+	}).then(function(response) {
+		console.log("added the following event: ");
+		console.log(response);
+		EVENTS.push(response.result)
+		redraw();
+	});
+}
+
+/**
+* Given a event name, start time, and end time, makes and returns an event.
+* Start and end are Time objects
+*/
+function makeEvent(name, start, end) {
+	event = {
+		"kind": "calendar#event",
+	    "summary": name,
+	    "status": "confirmed", // "confirmed", "tentative", or "cancelled"
+	    "description": "",
+	    "location": "",
+	    "colorId": "1", // TODO: allow user to specify color? 
+	    "start": {
+	      "date": null,
+	      "dateTime": start.toISOString(),
+	      "timeZone": null
+	    },
+	    "end": {
+	      "date": null,
+	      "dateTime": end.toISOString(),
+	      "timeZone": null
+	    },
+	    "transparency": "opaque"
+	};
+	return event;
+}
+
+

@@ -7,8 +7,7 @@ var DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/calendar/v3/
 
 // Authorization scopes required by the API; multiple scopes can be
 // included, separated by spaces.
-// TODO : look into scopes, give write permissions
-var SCOPES = "https://www.googleapis.com/auth/calendar.readonly";
+var SCOPES = "https://www.googleapis.com/auth/calendar";
 
 /**
 *  On load, called to load the auth2 library and API client library.
