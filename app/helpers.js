@@ -60,22 +60,19 @@ var showCalendar = function() {
 };
 
 var showToday = function() {
-  calendarTomorrowFader.hide();
-  calendarFader.show();
+  calendarModifier.setTransform(Transform.translate(0, 0, 0), { duration: 400, curve: 'easeInOut' });
   activeCalendar = 'today';
   activeEvents = events;
 }
 
 var showTomorrow = function() {
-  calendarFader.hide();
-  calendarTomorrowFader.show();
+  calendarModifier.setTransform(Transform.translate(-CALENDARWIDTH, 0, 0), { duration: 400, curve: 'easeInOut' });
   activeCalendar = 'tomorrow';
   activeEvents = eventsTomorrow;
 }
 
 var hideCalendar = function() {
   calendarFader.hide();
-  calendarTomorrowFader.hide();
   calendarLabelsFader.hide();
   eventDetailsFader.hide();
 };

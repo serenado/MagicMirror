@@ -10,14 +10,20 @@ var Draggable = famous.modifiers.Draggable;
 var Fader = famous.modifiers.Fader;
 var GridLayout = famous.views.GridLayout;
 
+// store Event objects for today and tomorrow
 var events = [];
-var eventModifiers = [];
 var eventsTomorrow = [];
-var eventModifiersTomorrow = [];
+
+// store Faders to show/hide calendar
 var calendarFader = new Fader();
-var calendarTomorrowFader = new Fader();
 var calendarLabelsFader = new Fader();
+
+// store Fader to show/hide event details
 var eventDetailsFader = new Fader();
+
+// store Modifier to 'scroll' between today and tomorrow
+var calendarModifier = new StateModifier();
+
 var calendarOrigin = [70, 70];
 var labelWidth = 40;
 
@@ -89,11 +95,37 @@ var setupUserInterface = function() {
   });
   mainContext.add(clockModifier).add(clockSurface);
 
+  var calendarSurface = new ContainerSurface();
+
   // Draw the calendar for today
-  drawCalendar(calendarFader, EVENTS, events, eventModifiers, 'Today');
+  drawCalendar(calendarSurface, EVENTS, events, 'Today', 0);
 
   // Draw the calendar for tomorrow
-  drawCalendar(calendarTomorrowFader, TOMORROW_EVENTS, eventsTomorrow, eventModifiersTomorrow, 'Tomorrow');
+  drawCalendar(calendarSurface, TOMORROW_EVENTS, eventsTomorrow, 'Tomorrow', CALENDARWIDTH);
+
+  mainContext.add(calendarFader).add(calendarModifier).add(calendarSurface);
+
+  // Draw rectangles that match background to cover inactive calendar
+  var rectLeft = new Surface({
+      size: [CALENDARWIDTH, HOURHEIGHT * 9 + calendarOrigin[1]],
+      properties: {
+        backgroundColor: "rgb(34, 34, 34)"
+      },
+  });
+  var rectLeftModifier = new StateModifier({
+    transform: Transform.translate(calendarOrigin[0] - CALENDARWIDTH, 0, 0)
+  });
+  mainContext.add(rectLeftModifier).add(rectLeft);
+  var rectRight = new Surface({
+      size: [CALENDARWIDTH, HOURHEIGHT * 9 + calendarOrigin[1]],
+      properties: {
+        backgroundColor: "rgb(34, 34, 34)"
+      },
+  });
+  var rectRightModifier = new StateModifier({
+    transform: Transform.translate(calendarOrigin[0] + CALENDARWIDTH, 0, 0)
+  });
+  mainContext.add(rectRightModifier).add(rectRight);
 
   // Draw the calendar lines and labels
   drawCalendarLabels();
@@ -103,8 +135,8 @@ var setupUserInterface = function() {
 };
 
 // CALENDAR
-var drawCalendar = function(fader, eventData, evts, mods, labelText) {
-  var calendarSurface = new ContainerSurface();
+var drawCalendar = function(container, eventData, evts=[], labelText='', xdelta=0) {
+  // var calendarSurface = new ContainerSurface();
 
   // draw label
   var label = new Surface({
@@ -118,14 +150,14 @@ var drawCalendar = function(fader, eventData, evts, mods, labelText) {
       },
   });
   var labelModifier = new StateModifier({
-    transform: Transform.translate(calendarOrigin[0], 20, 0)
+    transform: Transform.translate(calendarOrigin[0] + xdelta, 20, 0)
   });
-  calendarSurface.add(labelModifier).add(label);
+  container.add(labelModifier).add(label);
 
   // draw events
   eventData.forEach((e, i) => {
     var size, ypos;
-    var xpos = calendarOrigin[0];
+    var xpos = calendarOrigin[0] + xdelta;
     var start = null;
     var end = null;
 
@@ -160,12 +192,11 @@ var drawCalendar = function(fader, eventData, evts, mods, labelText) {
     // TODO: fill in later
     var eventModifier = new Modifier({
     });
-    calendarSurface.add(transformModifier).add(eventModifier).add(event);
+    container.add(transformModifier).add(eventModifier).add(event);
     evts.push(new Event({ start, end, size, pos: [xpos, ypos], data: e, surface: event }));
-    mods.push(eventModifier);
   });
 
-  mainContext.add(fader).add(calendarSurface);
+  // mainContext.add(fader).add(container);
 };
 
 var drawCalendarLabels = function() {
