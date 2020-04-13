@@ -173,7 +173,7 @@ var drawCalendar = function(container, eventData, evts=[], labelText='', xdelta=
       size = [CALENDARWIDTH, HOURHEIGHT * 0.5 - 2];
       ypos = calendarOrigin[1]
     }
-    var color = e.colorId == undefined ? Colors[(i % 4) + 1] : Colors[e.colorId];
+    var color = Colors[e.colorId];
 
     var event = new Surface({
       size: size,
