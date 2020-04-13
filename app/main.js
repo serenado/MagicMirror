@@ -124,11 +124,13 @@ var processSpeech = function(transcript) {
   // show tomorrow's calendar
   else if (isCalendarShowing() && activeCalendar === 'today' && userSaid(transcript, ['tomorrow'])) {
     showTomorrow();
+    processed = true;
   }
 
   // show today's calendar
   else if (isCalendarShowing() && activeCalendar === 'tomorrow' && userSaid(transcript, ['today'])) {
     showToday();
+    processed = true;
   }
 
   // see event details
@@ -158,8 +160,8 @@ var processSpeech = function(transcript) {
   }
 
   // delete an event
-  // TODO: deleting an event that was just created (need to know calendarId)
   // TODO: add colorIds to all events so the colors don't get shuffled around after deleting
+  // TODO: fade out
   else if (isCalendarShowing() && userSaid(transcript, ['delete', 'cancel'])) {
     // identify which event to delete
     var eventToDelete = null;

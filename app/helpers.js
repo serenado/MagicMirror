@@ -139,5 +139,8 @@ var hideEventDetails = function() {
 // removes old context and redraws everything
 var redraw = function() {
   Engine.deregisterContext(mainContext);
+  events = [];
+  eventsTomorrow = [];
   setupUserInterface();
+  activeEvents = activeCalendar === 'today' ? events : eventsTomorrow;
 }

@@ -1,6 +1,8 @@
 var EVENTS = [];
 var TOMORROW_EVENTS = [];
 var calendars = [];
+var primaryCalendarId = '';
+
 /**
 * Queries for list of user's calendars and returns all non-hidden calendars.
 * returns list of calendar IDs 
@@ -10,12 +12,13 @@ function getCalendars(callback) {
 		'showHidden': false
 	}).then(function(response) {
 		var result = response.result.items;
-		result.forEach(item => 
-			calendars.push(item.id));
+		result.forEach(item => {
+			calendars.push(item.id);
+			if (item.primary) { primaryCalendarId = item.id };
+		});
 		callback(calendars);
 	});
 }
-
 
 /**
 * Queries for list of events happening today in the user's calendar.
@@ -82,8 +85,7 @@ function insertEvent(event, calendarID = "primary") {
 	}).then(function(response) {
 		console.log("added the following event: ");
 		console.log(response);
-		// TODO: determine real calendarId
-		EVENTS.push(Object({...response.result, calendarId }))
+		EVENTS.push(Object({...response.result, calendarId: primaryCalendarId }))
 		redraw();
 	});
 }
@@ -92,6 +94,7 @@ function insertEvent(event, calendarID = "primary") {
 * Given an event specified by calendarId and eventId, makes a request to delete the event and then redraws.
 */
 function deleteEvent(calendarId, eventId) {
+	console.log(calendarId)
 	gapi.client.calendar.events.delete({
 		'calendarId': calendarId,
 		'eventId': eventId,
