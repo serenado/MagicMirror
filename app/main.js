@@ -157,6 +157,42 @@ var processSpeech = function(transcript) {
     processed = true;
   }
 
+  // delete an event
+  // TODO: deleting an event that was just created (need to know calendarId)
+  // TODO: add colorIds to all events so the colors don't get shuffled around after deleting
+  else if (isCalendarShowing() && userSaid(transcript, ['delete', 'cancel'])) {
+    // identify which event to delete
+    var eventToDelete = null;
+    voiceOnly = false;
+    // see if user said an event name
+    activeEvents.forEach((event, i) => {
+      if (userSaid(transcript, [event.get('data').summary])) {
+        console.log('delete', event.get('data').summary);
+        voiceOnly = true;
+        eventToDelete = event;
+      }
+    });
+    // check if user is using a point-and-say command
+    if (!voiceOnly && hoveredEvent) {     
+      console.log('delete', hoveredEvent.get('data').summary);
+      eventToDelete = hoveredEvent;
+    }
+
+    // delete event if one was properly specified
+    if (eventToDelete) {
+      // remove event from EVENTS or TOMORROW_EVENTS
+      var i = activeEvents.indexOf(eventToDelete);
+      if (activeCalendar === 'today') {
+        EVENTS.splice(i, 1);
+      } else {
+        TOMORROW_EVENTS.splice(i, 1);
+      }
+      // delete event from google calendar to sync and redraw
+      deleteEvent(eventToDelete.get('data').calendarId, eventToDelete.get('data').id);
+      processed = true;
+    }
+  }
+
   // TODO : have a global variable that keeps track of the logged in state
   else if (userSaid(transcript, ['login'])) {
     handleAuthClick();

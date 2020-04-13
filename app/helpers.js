@@ -58,6 +58,7 @@ var interpretTimeInput = function(timeString) {
       minutes = parseInt(timeString.substring(hourLength));
     }
   }
+  console.log(timeString, hours, minutes);
   t.setHours(hours);
   t.setMinutes(minutes);
   return t;
@@ -104,12 +105,14 @@ var showToday = function() {
   calendarModifier.setTransform(Transform.translate(0, 0, 0), { duration: 400, curve: 'easeInOut' });
   activeCalendar = 'today';
   activeEvents = events;
+  eventDetailsFader.hide();
 }
 
 var showTomorrow = function() {
   calendarModifier.setTransform(Transform.translate(-CALENDARWIDTH, 0, 0), { duration: 400, curve: 'easeInOut' });
   activeCalendar = 'tomorrow';
   activeEvents = eventsTomorrow;
+  eventDetailsFader.hide();
 }
 
 var hideCalendar = function() {

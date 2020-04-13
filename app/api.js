@@ -54,14 +54,15 @@ function getEventsForToday(ids) {
 		  'showDeleted': false,
 		  'singleEvents': true,
 		  'orderBy': 'startTime'
-		}), {'id': 'tomorrow ' + id});
+		}), {'id': 'tomor ' + id});
 	}
 	batch.then(function(response) {
 		for (var key in response.result) {
+			calendarId = key.slice(6);
 			if (key.indexOf('today') > -1) {
-				response.result[key].result.items.forEach(event => EVENTS.push(event));
+				response.result[key].result.items.forEach(event => EVENTS.push(Object({...event, calendarId })));
 			} else {
-				response.result[key].result.items.forEach(event => TOMORROW_EVENTS.push(event));
+				response.result[key].result.items.forEach(event => TOMORROW_EVENTS.push(Object({...event, calendarId })));
 			}
 		};
 		console.log('today', EVENTS)
@@ -81,7 +82,21 @@ function insertEvent(event, calendarID = "primary") {
 	}).then(function(response) {
 		console.log("added the following event: ");
 		console.log(response);
-		EVENTS.push(response.result)
+		// TODO: determine real calendarId
+		EVENTS.push(Object({...response.result, calendarId }))
+		redraw();
+	});
+}
+
+/**
+* Given an event specified by calendarId and eventId, makes a request to delete the event and then redraws.
+*/
+function deleteEvent(calendarId, eventId) {
+	gapi.client.calendar.events.delete({
+		'calendarId': calendarId,
+		'eventId': eventId,
+	}).then(function(response) {
+		console.log(response);
 		redraw();
 	});
 }
