@@ -63,9 +63,9 @@ function getEventsForToday(ids) {
 		for (var key in response.result) {
 			calendarId = key.slice(6);
 			if (key.indexOf('today') > -1) {
-				response.result[key].result.items.forEach(event => EVENTS.push(Object({...event, calendarId })));
+				response.result[key].result.items.forEach(event => EVENTS.push(Object({...event, colorId: Math.ceil(Math.random() * 4), calendarId })));
 			} else {
-				response.result[key].result.items.forEach(event => TOMORROW_EVENTS.push(Object({...event, calendarId })));
+				response.result[key].result.items.forEach(event => TOMORROW_EVENTS.push(Object({...event, colorId: Math.ceil(Math.random() * 4), calendarId })));
 			}
 		};
 		console.log('today', EVENTS)
@@ -90,9 +90,9 @@ function insertEvent(event, calendarID = "primary") {
 		var eventDate = parseDateTime(event["start"]["dateTime"]);
 		console.log(eventDate);
 		if (eventDate.get('day') > now.getDate() ) {
-			TOMORROW_EVENTS.push(Object({...response.result, calendarId: primaryCalendarId }));
+			TOMORROW_EVENTS.push(Object({...response.result, colorId: Math.ceil(Math.random() * 4), calendarId: primaryCalendarId }));
 		} else {
-			EVENTS.push(Object({...response.result, calendarId: primaryCalendarId }));
+			EVENTS.push(Object({...response.result, colorId: Math.ceil(Math.random() * 4), calendarId: primaryCalendarId }));
 		}
 		redraw();
 	});
