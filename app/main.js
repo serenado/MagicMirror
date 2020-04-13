@@ -242,6 +242,10 @@ var processSpeech = function(transcript) {
       endTime = interpretTimeInput(endString);
     }
 
+    if (userSaid(transcript, ["tomorrow"]) || activeCalendar === 'tomorrow') {
+      startTime.setDate(startTime.getDate() + 1);
+      endTime.setDate(endTime.getDate() + 1);
+    }
     var newEvent = makeEvent("New Event", startTime, endTime);
     insertEvent(newEvent);
     processed = true;

@@ -193,10 +193,8 @@ var drawCalendar = function(container, eventData, evts=[], labelText='', xdelta=
     var eventModifier = new Modifier({
     });
     container.add(transformModifier).add(eventModifier).add(event);
-    evts.push(new Event({ start, end, size, pos: [xpos, ypos], data: e, surface: event }));
+    evts.push(new Event({ start, end, size, pos: [calendarOrigin[0], ypos], data: e, surface: event }));
   });
-
-  // mainContext.add(fader).add(container);
 };
 
 var drawCalendarLabels = function() {
