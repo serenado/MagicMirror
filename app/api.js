@@ -76,6 +76,8 @@ function getEventsForToday(ids) {
 * Defaults to 'primary' calendar.
 */
 function insertEvent(event, calendarID = "primary") {
+	// check if event is for today or tomorrow
+	var now = new Date();
 	gapi.client.calendar.events.insert({
 		'calendarId': calendarID,
 		'resource': event
@@ -83,7 +85,14 @@ function insertEvent(event, calendarID = "primary") {
 		console.log("added the following event: ");
 		console.log(response);
 		// TODO: determine real calendarId
-		EVENTS.push(Object({...response.result, calendarId }))
+
+		var eventDate = parseDateTime(event["start"]["dateTime"]);
+		console.log(eventDate);
+		if (eventDate.get('day') > now.getDate() ) {
+			TOMORROW_EVENTS.push(Object({...response.result, calendarId }));
+		} else {
+			EVENTS.push(Object({...response.result, calendarId }));
+		}
 		redraw();
 	});
 }
