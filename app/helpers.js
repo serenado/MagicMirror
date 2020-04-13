@@ -109,7 +109,7 @@ var showToday = function() {
 }
 
 var showTomorrow = function() {
-  calendarModifier.setTransform(Transform.translate(-CALENDARWIDTH, 0, 0), { duration: 400, curve: 'easeInOut' });
+  calendarModifier.setTransform(Transform.translate(-(CALENDARWIDTH + 10), 0, 0), { duration: 400, curve: 'easeInOut' });
   activeCalendar = 'tomorrow';
   activeEvents = eventsTomorrow;
   eventDetailsFader.hide();

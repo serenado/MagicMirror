@@ -101,7 +101,7 @@ var setupUserInterface = function() {
   drawCalendar(calendarSurface, EVENTS, events, 'Today', 0);
 
   // Draw the calendar for tomorrow
-  drawCalendar(calendarSurface, TOMORROW_EVENTS, eventsTomorrow, 'Tomorrow', CALENDARWIDTH);
+  drawCalendar(calendarSurface, TOMORROW_EVENTS, eventsTomorrow, 'Tomorrow', CALENDARWIDTH + 10);
 
   mainContext.add(calendarFader).add(calendarModifier).add(calendarSurface);
 
@@ -117,7 +117,7 @@ var setupUserInterface = function() {
   });
   mainContext.add(rectLeftModifier).add(rectLeft);
   var rectRight = new Surface({
-      size: [CALENDARWIDTH, HOURHEIGHT * 9 + calendarOrigin[1]],
+      size: [CALENDARWIDTH + 10, HOURHEIGHT * 9 + calendarOrigin[1]],
       properties: {
         backgroundColor: "rgb(34, 34, 34)"
       },
