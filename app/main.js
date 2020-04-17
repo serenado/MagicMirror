@@ -211,7 +211,7 @@ var processSpeech = function(transcript) {
     var fromIndex = transcript.indexOf("from");
     var tokens = transcript.split(" ");
     if (atIndex != -1) {
-
+      // if user says "at"
       var timeString = tokens[tokens.indexOf("at")+1];
       startTime = interpretTimeInput(timeString);
 
@@ -221,8 +221,9 @@ var processSpeech = function(transcript) {
       endTime.setMinutes(startTime.getMinutes());
 
     } else if (fromIndex != -1) {
+      // if user says "from"
       var startString = tokens[tokens.indexOf("from")+1];
-      var startTime = interpretTimeInput(startString);
+      startTime = interpretTimeInput(startString);
 
       var endIndex = -1;
       var endOptions = ["until", "till", "to"];
@@ -240,6 +241,14 @@ var processSpeech = function(transcript) {
         var endString = tokens[endIndex + 1];
       }
       endTime = interpretTimeInput(endString);
+    } else {
+      // if user uses Leap to point at time
+      startTime = new Date();
+      startTime.setHours(getTimeFromCursor(cursor));
+      startTime.setMinutes(0);
+      endTime = new Date();
+      endTime.setHours(startTime.getHours() + 1);
+      endTime.setMinutes(startTime.getMinutes());
     }
 
     if (userSaid(transcript, ["tomorrow"]) || activeCalendar === 'tomorrow') {

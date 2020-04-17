@@ -144,3 +144,9 @@ var redraw = function() {
   setupUserInterface();
   activeEvents = activeCalendar === 'today' ? events : eventsTomorrow;
 }
+
+// gets hour block that cursor is currently hovering over
+var getTimeFromCursor = function(cursor) {
+  var y = cursor.get('screenPosition')[1];
+  return Math.floor((y - 130.0) / 60.0) + 10;
+};
