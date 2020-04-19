@@ -101,15 +101,52 @@ function insertEvent(event, calendarID = "primary") {
 /**
 * Given an event specified by calendarId and eventId, makes a request to delete the event and then redraws.
 */
-function deleteEvent(calendarId, eventId) {
-	console.log(calendarId)
+function deleteEvent(calendarId, eventId, event) {
 	gapi.client.calendar.events.delete({
 		'calendarId': calendarId,
 		'eventId': eventId,
 	}).then(function(response) {
 		console.log(response);
+		// remove event from EVENTS or TOMORROW_EVENTS
+		var i = activeEvents.indexOf(event);
+		if (activeCalendar === 'today') {
+			EVENTS.splice(i, 1);
+		} else {
+			TOMORROW_EVENTS.splice(i, 1);
+		}
 		redraw();
 	});
+}
+
+/**
+* Given an event specified by calendarId and eventId, update the event according to the provided
+* eventResource. The event and moveToTomorrow parameters are used to update EVENTS and TOMORROW_EVENTS.
+*/
+function updateEvent(calendarId, eventId, eventResource, event, moveToTomorrow) {
+	gapi.client.calendar.events.update({
+		'calendarId': calendarId,
+		'eventId': eventId,
+		'resource': eventResource
+	}).then(function(response) {
+		console.log(response);
+		updatedEvent = Object({ ...response.result, calendarId: calendarId });
+		var i = activeEvents.indexOf(event);
+		if (activeCalendar === 'today') {
+			if (moveToTomorrow) {
+				EVENTS.splice(i, 1);
+				TOMORROW_EVENTS.push(updatedEvent)
+			} else {
+				EVENTS[i] = updatedEvent;
+			}
+		} else {
+			if (moveToTomorrow) {
+				TOMORROW_EVENTS.splice(i, 1);
+			} else {	
+				TOMORROW_EVENTS[i] = updatedEvent;
+			}
+		}
+		redraw();
+	})
 }
 
 /**

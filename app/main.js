@@ -58,8 +58,8 @@ Leap.loop({ enableGestures: true},  function(frame) {
             //Classify swipe as either horizontal or vertical
             var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
             //Classify as right-left or up-down
-            if(isHorizontal) {
-              if(gesture.direction[0] > 0) { // swipe right
+            if (isHorizontal) {
+              if (gesture.direction[0] > 0) { // swipe right
                 // show today's calendar
                 if (isCalendarShowing() && activeCalendar === 'tomorrow') {
                   showToday();
@@ -71,7 +71,7 @@ Leap.loop({ enableGestures: true},  function(frame) {
                 }
               }
             } else { //vertical
-              if(gesture.direction[1] > 0) { // swipe up
+              if (gesture.direction[1] > 0) { // swipe up
                 // if hovering over event details, close event details
                 if (isEventDetailsShowing() && cursorPosition[0] > calendarOrigin[0] + CALENDARWIDTH) {
                   hideEventDetails();
@@ -79,7 +79,9 @@ Leap.loop({ enableGestures: true},  function(frame) {
                   hideCalendar();
                 }
               } else { // swipe down
-                
+                if (!isCalendarShowing()) {
+                  showCalendar();
+                }
               }                  
             }
             break;
@@ -122,18 +124,6 @@ var processSpeech = function(transcript) {
     processed = true;
   }
 
-  // show tomorrow's calendar
-  else if (isCalendarShowing() && activeCalendar === 'today' && userSaid(transcript, ['tomorrow'])) {
-    showTomorrow();
-    processed = true;
-  }
-
-  // show today's calendar
-  else if (isCalendarShowing() && activeCalendar === 'tomorrow' && userSaid(transcript, ['today'])) {
-    showToday();
-    processed = true;
-  }
-
   // see event details
   else if (isCalendarShowing() && userSaid(transcript, ['see more', 'seymour', 'details', 'detail'])
         && !userSaid(transcript, ['hide', 'close'])) {
@@ -161,7 +151,6 @@ var processSpeech = function(transcript) {
   }
 
   // delete an event
-  // TODO: add colorIds to all events so the colors don't get shuffled around after deleting
   // TODO: fade out
   else if (isCalendarShowing() && userSaid(transcript, ['delete', 'cancel'])) {
     // identify which event to delete
@@ -183,16 +172,76 @@ var processSpeech = function(transcript) {
 
     // delete event if one was properly specified
     if (eventToDelete) {
-      // remove event from EVENTS or TOMORROW_EVENTS
-      var i = activeEvents.indexOf(eventToDelete);
-      if (activeCalendar === 'today') {
-        EVENTS.splice(i, 1);
-      } else {
-        TOMORROW_EVENTS.splice(i, 1);
-      }
       // delete event from google calendar to sync and redraw
-      deleteEvent(eventToDelete.get('data').calendarId, eventToDelete.get('data').id);
+      deleteEvent(eventToDelete.get('data').calendarId, eventToDelete.get('data').id, eventToDelete);
       processed = true;
+    }
+  }
+
+  // reschedule an event
+  // TODO: reschedule event to tomorrow
+  else if (isCalendarShowing() && userSaid(transcript, ['reschedule', 'move'])) {
+    // identify which event to delete
+    var eventToMove = null;
+    voiceOnly = false;
+    // see if user said an event name
+    activeEvents.forEach((event, i) => {
+      if (userSaid(transcript, [event.get('data').summary])) {
+        voiceOnly = true;
+        eventToMove = event;
+      }
+    });
+    // check if user is pointing to an event
+    if (!voiceOnly && hoveredEvent) {
+      eventToMove = hoveredEvent;
+    }
+
+    // move event if one was properly specified
+    if (eventToMove) {
+      console.log('reschedule', eventToMove.get('data').summary);
+      // get new start time
+      if (userSaid(transcript, ['to'])) {
+        var tokens = transcript.split(" ");
+        var timeString = tokens[tokens.indexOf("to") + 1];
+        var newStartTime;
+        var moveToTomorrow = false;
+        if (timeString === 'tomorrow') {
+          newStartTime = eventToMove.get('start').toDate();
+          newStartTime.setDate(newStartTime.getDate() + 1);
+          moveToTomorrow = true;
+        } else {
+          newStartTime = interpretTimeInput(timeString);
+        }
+
+        // calculate new end time
+        var duration = getDuration(eventToMove.get('start'), eventToMove.get('end'));
+        var newEndTime = new Date();
+        newEndTime.setDate(newStartTime.getDate());
+        newEndTime.setHours(newStartTime.getHours() + Math.floor(duration));
+        newEndTime.setMinutes(newStartTime.getMinutes() + ((duration % 1) * 60)); 
+        if (activeCalendar === 'tomorrow') {
+          newStartTime.setDate(newStartTime.getDate() + 1);
+          newEndTime.setDate(newEndTime.getDate() + 1);
+        }
+
+        // update event
+        var start = {
+          "data": null,
+          "dateTime": newStartTime.toISOString(),
+          "timeZone": null
+        };
+        var end = {
+          "data": null,
+          "dateTime": newEndTime.toISOString(),
+          "timeZone": null
+        };
+        updateEvent(eventToMove.get('data').calendarId, eventToMove.get('data').id, Object({ ...eventToMove.get('data'), start, end }), eventToMove, moveToTomorrow);
+        processed = true;
+      } else {
+        //  TODO: system feedback on how to specify a time
+      }
+    } else {
+      // TODO: system feedback on how to specify an event
     }
   }
 
@@ -276,7 +325,18 @@ var processSpeech = function(transcript) {
       insertEvent(newEvent);
       processed = true;
       }
+  }
 
+  // show tomorrow's calendar
+  else if (isCalendarShowing() && activeCalendar === 'today' && userSaid(transcript, ['tomorrow'])) {
+    showTomorrow();
+    processed = true;
+  }
+
+  // show today's calendar
+  else if (isCalendarShowing() && activeCalendar === 'tomorrow' && userSaid(transcript, ['today'])) {
+    showToday();
+    processed = true;
   }
 
   return processed;
