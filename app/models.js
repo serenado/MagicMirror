@@ -33,6 +33,16 @@ var Time = Backbone.Model.extend({
   format: function() {
     return ("00" + this.get('hour')).slice(-2) + ":" + ("00" + this.get('minute')).slice(-2);
   },
+  toDate: function() {
+    date = new Date();
+    date.setFullYear(this.get('year'));
+    date.setMonth(this.get('month') - 1);
+    date.setDate(this.get('day'));
+    date.setHours(this.get('hour'));
+    date.setMinutes(this.get('minute'));
+    date.setSeconds(this.get('second'));
+    return date;
+  }
 });
 
 var Event = Backbone.Model.extend({
