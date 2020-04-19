@@ -57,8 +57,8 @@ Leap.loop({ enableGestures: true},  function(frame) {
             //Classify swipe as either horizontal or vertical
             var isHorizontal = Math.abs(gesture.direction[0]) > Math.abs(gesture.direction[1]);
             //Classify as right-left or up-down
-            if(isHorizontal) {
-              if(gesture.direction[0] > 0) { // swipe right
+            if (isHorizontal) {
+              if (gesture.direction[0] > 0) { // swipe right
                 // show today's calendar
                 if (isCalendarShowing() && activeCalendar === 'tomorrow') {
                   showToday();
@@ -70,7 +70,7 @@ Leap.loop({ enableGestures: true},  function(frame) {
                 }
               }
             } else { //vertical
-              if(gesture.direction[1] > 0) { // swipe up
+              if (gesture.direction[1] > 0) { // swipe up
                 // if hovering over event details, close event details
                 if (isEventDetailsShowing() && cursorPosition[0] > calendarOrigin[0] + CALENDARWIDTH) {
                   hideEventDetails();
@@ -78,7 +78,9 @@ Leap.loop({ enableGestures: true},  function(frame) {
                   hideCalendar();
                 }
               } else { // swipe down
-                
+                if (!isCalendarShowing()) {
+                  showCalendar();
+                }
               }                  
             }
             break;
