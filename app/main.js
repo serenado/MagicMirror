@@ -258,12 +258,13 @@ var processSpeech = function(transcript) {
 
     var startTime, endTime;
 
-    var atIndex = transcript.indexOf("at");
-    var fromIndex = transcript.indexOf("from");
+
     var tokens = transcript.split(" ");
+    var atIndex = tokens.indexOf("at");
+    var fromIndex = transcript.indexOf("from");
     if (atIndex != -1) {
       // if user says "at"
-      var timeString = tokens[tokens.indexOf("at")+1];
+      var timeString = tokens[atIndex+1];
       startTime = interpretTimeInput(timeString);
 
       // makes event, assumes 1 hour duration 
@@ -271,7 +272,7 @@ var processSpeech = function(transcript) {
 
     } else if (fromIndex != -1) {
       // if user says "from"
-      var startString = tokens[tokens.indexOf("from")+1];
+      var startString = tokens[fromIndex+1];
       startTime = interpretTimeInput(startString);
 
       var endIndex = -1;
