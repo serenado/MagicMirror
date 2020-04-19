@@ -119,7 +119,8 @@ function deleteEvent(calendarId, eventId, event) {
 }
 
 /**
-*
+* Given an event specified by calendarId and eventId, update the event according to the provided
+* eventResource. The event and moveToTomorrow parameters are used to update EVENTS and TOMORROW_EVENTS.
 */
 function updateEvent(calendarId, eventId, eventResource, event, moveToTomorrow) {
 	gapi.client.calendar.events.update({
