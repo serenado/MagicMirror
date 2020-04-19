@@ -34,6 +34,11 @@ var interpretTimeInput = function(timeString) {
   if (timeString == "noon") {
     t.setHours(12);
     return t;
+  } 
+
+  if (timeString == "for") {
+    t.setHours(16);
+    return t;
   }
 
   var colon = timeString.indexOf(":");
@@ -150,3 +155,32 @@ var getTimeFromCursor = function(cursor) {
   var y = cursor.get('screenPosition')[1];
   return Math.floor((y - 130.0) / 60.0) + 10;
 };
+
+// SPEECH SYNTHESIS SETUP
+var voicesReady = false;
+window.speechSynthesis.onvoiceschanged = function() {
+  voicesReady = true;
+  // Uncomment to see a list of voices
+  //console.log("Choose a voice:\n" + window.speechSynthesis.getVoices().map(function(v,i) { return i + ": " + v.name; }).join("\n"));
+};
+
+var generateSpeech = function(message, callback) {
+  if (voicesReady) {
+    var msg = new SpeechSynthesisUtterance();
+    // use Google US English
+    msg.voice = window.speechSynthesis.getVoices()[49];
+    msg.text = message;
+    msg.rate = 1.0;
+    if (typeof callback !== "undefined")
+      msg.onend = callback;
+    window.speechSynthesis.speak(msg);
+  }
+};
+
+// given a start Date, returns an end Date exactly one hour later
+var getOneHourEvent = function(startTime) {
+  endTime = new Date();
+  endTime.setHours(startTime.getHours() + 1);
+  endTime.setMinutes(startTime.getMinutes());
+  return endTime;
+}

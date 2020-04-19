@@ -11,6 +11,7 @@ if (AUTOSHOW) { showCalendar(); }
 var hoveredEvent = false;
 var activeCalendar = 'today';
 var activeEvents = events;
+var waitingForVoiceResponse = false;
 
 // MAIN LOOP
 Leap.loop({ enableGestures: true},  function(frame) {
@@ -202,8 +203,9 @@ var processSpeech = function(transcript) {
   }
 
   // add a new event
-  else if (userSaid(transcript, ['make', 'schedule', 'create', 'meeting', 'class', 'interview', 'event', 'appointment'])) {
-    console.log("making event");
+  else if (userSaid(transcript, ['make', 'schedule', 'create', 'meeting', 'class', 'interview', 'event', 'appointment'])
+    || waitingForVoiceResponse ) {
+    // console.log("making event");
 
     var startTime, endTime;
 
@@ -216,9 +218,7 @@ var processSpeech = function(transcript) {
       startTime = interpretTimeInput(timeString);
 
       // makes event, assumes 1 hour duration 
-      endTime = new Date();
-      endTime.setHours(startTime.getHours() + 1);
-      endTime.setMinutes(startTime.getMinutes());
+      endTime = getOneHourEvent(startTime);
 
     } else if (fromIndex != -1) {
       // if user says "from"
@@ -232,32 +232,50 @@ var processSpeech = function(transcript) {
           endIndex = tokens.indexOf(endOptions[i]);
         }
       }
-
       if (endIndex == -1) {
-        endTime = new Date();
-        endTime.setHours(startTime.getHours() + 1);
-        endTime.setMinutes(startTime.getMinutes());      
+        endTime = getOneHourEvent(startTime);   
       } else {
         var endString = tokens[endIndex + 1];
+        endTime = interpretTimeInput(endString);
       }
-      endTime = interpretTimeInput(endString);
     } else {
       // if user uses Leap to point at time
-      startTime = new Date();
-      startTime.setHours(getTimeFromCursor(cursor));
-      startTime.setMinutes(0);
-      endTime = new Date();
-      endTime.setHours(startTime.getHours() + 1);
-      endTime.setMinutes(startTime.getMinutes());
+      // only uses time if cursor is hovering over calendar
+      if (cursor.get('screenPosition')[0] > 60 && cursor.get('screenPosition')[0] < 280) {
+        startTime = new Date();
+        startTime.setHours(getTimeFromCursor(cursor));
+        startTime.setMinutes(0);
+        endTime = getOneHourEvent(startTime);
+      }
+    }
+
+    // check if start and end time is defined
+    if (startTime == null) {
+      console.log("no start time yet");
+
+      if (waitingForVoiceResponse) {
+        // transcript should have "Start time [user input]"" so parse time right after the word 'time' "
+        startTime = interpretTimeInput(tokens[tokens.indexOf("time") + 1]);
+        endTime = getOneHourEvent(startTime);
+        waitingForVoiceResponse = false;
+      } else {
+      generateSpeech("Start time?", ()=> {
+        waitingForVoiceResponse = true;
+        processed = true;
+        });
+      }
     }
 
     if (userSaid(transcript, ["tomorrow"]) || activeCalendar === 'tomorrow') {
       startTime.setDate(startTime.getDate() + 1);
       endTime.setDate(endTime.getDate() + 1);
     }
-    var newEvent = makeEvent("New Event", startTime, endTime);
-    insertEvent(newEvent);
-    processed = true;
+
+    if (startTime != null && endTime != null) {
+      var newEvent = makeEvent("New Event", startTime, endTime);
+      insertEvent(newEvent);
+      processed = true;
+      }
 
   }
 
