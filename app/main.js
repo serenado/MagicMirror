@@ -252,7 +252,8 @@ var processSpeech = function(transcript) {
   }
 
   // add a new event
-  else if (userSaid(transcript, ['make', 'schedule', 'create', 'meeting', 'class', 'interview', 'event', 'appointment'])
+  else if (userSaid(transcript, ['make', 'schedule', 'create', 'new', 'add'])
+    && userSaid(transcript,  ['meeting', 'class', 'interview', 'event', 'appointment'])
     || waitingForVoiceResponse ) {
     // console.log("making event");
 
@@ -309,7 +310,7 @@ var processSpeech = function(transcript) {
         endTime = getOneHourEvent(startTime);
         waitingForVoiceResponse = false;
       } else {
-      generateSpeech("Start time?", ()=> {
+      generateSpeech("For what time?", () => {
         waitingForVoiceResponse = true;
         processed = true;
         });
