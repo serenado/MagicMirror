@@ -1,3 +1,35 @@
+// equality check function for Arrays because javascript sux
+
+// Warn if overriding existing method
+if(Array.prototype.equals)
+    console.warn("Overriding existing Array.prototype.equals. Possible causes: New API defines the method, there's a framework conflict or you've got double inclusions in your code.");
+// attach the .equals method to Array's prototype to call it on any array
+Array.prototype.equals = function (array) {
+    // if the other array is a falsy value, return
+    if (!array)
+        return false;
+
+    // compare lengths - can save a lot of time 
+    if (this.length != array.length)
+        return false;
+
+    for (var i = 0, l=this.length; i < l; i++) {
+        // Check if we have nested arrays
+        if (this[i] instanceof Array && array[i] instanceof Array) {
+            // recurse into the nested arrays
+            if (!this[i].equals(array[i]))
+                return false;       
+        }           
+        else if (this[i] != array[i]) { 
+            // Warning - two different object instances will never be equal: {x:20} != {x:20}
+            return false;   
+        }           
+    }       
+    return true;
+}
+// Hide method from for-in loops
+Object.defineProperty(Array.prototype, "equals", {enumerable: false});
+
 var parseDateTime = function(dateTime) {
   // e.g. "2020-04-07T11:00:00-05:00"
   var year = parseInt(dateTime.slice(0, 4));
@@ -156,15 +188,25 @@ var getTimeFromCursor = function(cursor) {
   return Math.floor((y - 130.0) / 60.0) + 10;
 };
 
+// Helper function to detect if any commands appear in a string
+var userSaid = function(str, commands) {
+  for (var i = 0; i < commands.length; i++) {
+    if (str.toLowerCase().indexOf(commands[i].toLowerCase()) > -1)
+      return true;
+  }
+  return false;
+};
+
 // SPEECH SYNTHESIS SETUP
 var voicesReady = false;
 window.speechSynthesis.onvoiceschanged = function() {
   voicesReady = true;
   // Uncomment to see a list of voices
-  //console.log("Choose a voice:\n" + window.speechSynthesis.getVoices().map(function(v,i) { return i + ": " + v.name; }).join("\n"));
+  // console.log("Choose a voice:\n" + window.speechSynthesis.getVoices().map(function(v,i) { return i + ": " + v.name; }).join("\n"));
 };
 
 var generateSpeech = function(message, callback) {
+  console.log("CPU: ", message)
   if (voicesReady) {
     var msg = new SpeechSynthesisUtterance();
     // use Google US English
@@ -183,4 +225,31 @@ var getOneHourEvent = function(startTime) {
   endTime.setHours(startTime.getHours() + 1);
   endTime.setMinutes(startTime.getMinutes());
   return endTime;
+}
+
+// given an event and a new start time, reschedules the event to that time
+var moveEvent = function(eventToMove, newStartTime, moveToTomorrow) {
+  // calculate new end time
+  var duration = getDuration(eventToMove.get('start'), eventToMove.get('end'));
+  var newEndTime = new Date();
+  newEndTime.setDate(newStartTime.getDate());
+  newEndTime.setHours(newStartTime.getHours() + Math.floor(duration));
+  newEndTime.setMinutes(newStartTime.getMinutes() + ((duration % 1) * 60)); 
+  if (activeCalendar === 'tomorrow') {
+    newStartTime.setDate(newStartTime.getDate() + 1);
+    newEndTime.setDate(newEndTime.getDate() + 1);
+  }
+
+  // update event
+  var start = {
+    "data": null,
+    "dateTime": newStartTime.toISOString(),
+    "timeZone": null
+  };
+  var end = {
+    "data": null,
+    "dateTime": newEndTime.toISOString(),
+    "timeZone": null
+  };
+  updateEvent(eventToMove.get('data').calendarId, eventToMove.get('data').id, Object({ ...eventToMove.get('data'), start, end }), eventToMove, moveToTomorrow);
 }

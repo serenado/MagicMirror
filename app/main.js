@@ -99,14 +99,6 @@ Leap.loop({ enableGestures: true},  function(frame) {
 // Output: 
 //    processed, a boolean indicating whether the system reacted to the speech or not
 var processSpeech = function(transcript) {
-  // Helper function to detect if any commands appear in a string
-  var userSaid = function(str, commands) {
-    for (var i = 0; i < commands.length; i++) {
-      if (str.toLowerCase().indexOf(commands[i].toLowerCase()) > -1)
-        return true;
-    }
-    return false;
-  };
 
   var processed = false;
 
@@ -118,8 +110,8 @@ var processSpeech = function(transcript) {
   }
 
   // hide calendar
-  else if (isCalendarShowing() && userSaid(transcript, ['calendar', 'schedule']) 
-        && userSaid(transcript, ['hide', 'close'])) {
+  else if (isCalendarShowing() && userSaid(transcript, ['calendar', 'schedule', 'bye']) 
+        && userSaid(transcript, ['hide', 'close', 'bye'])) {
     hideCalendar();
     processed = true;
   }
@@ -179,70 +171,10 @@ var processSpeech = function(transcript) {
   }
 
   // reschedule an event
-  // TODO: reschedule event to tomorrow
-  else if (isCalendarShowing() && userSaid(transcript, ['reschedule', 'move'])) {
-    // identify which event to delete
-    var eventToMove = null;
-    voiceOnly = false;
-    // see if user said an event name
-    activeEvents.forEach((event, i) => {
-      if (userSaid(transcript, [event.get('data').summary])) {
-        voiceOnly = true;
-        eventToMove = event;
-      }
-    });
-    // check if user is pointing to an event
-    if (!voiceOnly && hoveredEvent) {
-      eventToMove = hoveredEvent;
-    }
-
-    // move event if one was properly specified
-    if (eventToMove) {
-      console.log('reschedule', eventToMove.get('data').summary);
-      // get new start time
-      if (userSaid(transcript, ['to'])) {
-        var tokens = transcript.split(" ");
-        var timeString = tokens[tokens.indexOf("to") + 1];
-        var newStartTime;
-        var moveToTomorrow = false;
-        if (timeString === 'tomorrow') {
-          newStartTime = eventToMove.get('start').toDate();
-          newStartTime.setDate(newStartTime.getDate() + 1);
-          moveToTomorrow = true;
-        } else {
-          newStartTime = interpretTimeInput(timeString);
-        }
-
-        // calculate new end time
-        var duration = getDuration(eventToMove.get('start'), eventToMove.get('end'));
-        var newEndTime = new Date();
-        newEndTime.setDate(newStartTime.getDate());
-        newEndTime.setHours(newStartTime.getHours() + Math.floor(duration));
-        newEndTime.setMinutes(newStartTime.getMinutes() + ((duration % 1) * 60)); 
-        if (activeCalendar === 'tomorrow') {
-          newStartTime.setDate(newStartTime.getDate() + 1);
-          newEndTime.setDate(newEndTime.getDate() + 1);
-        }
-
-        // update event
-        var start = {
-          "data": null,
-          "dateTime": newStartTime.toISOString(),
-          "timeZone": null
-        };
-        var end = {
-          "data": null,
-          "dateTime": newEndTime.toISOString(),
-          "timeZone": null
-        };
-        updateEvent(eventToMove.get('data').calendarId, eventToMove.get('data').id, Object({ ...eventToMove.get('data'), start, end }), eventToMove, moveToTomorrow);
-        processed = true;
-      } else {
-        //  TODO: system feedback on how to specify a time
-      }
-    } else {
-      // TODO: system feedback on how to specify an event
-    }
+  else if (isCalendarShowing() && rescheduleDialogue.isTriggered(transcript)) {
+    console.log('advance reschedule dialogue')
+    rescheduleDialogue.get('advance')(transcript);
+    processed = true;
   }
 
   // TODO : have a global variable that keeps track of the logged in state
@@ -252,9 +184,9 @@ var processSpeech = function(transcript) {
   }
 
   // add a new event
-  else if (userSaid(transcript, ['make', 'schedule', 'create', 'new', 'add'])
-    && userSaid(transcript,  ['meeting', 'class', 'interview', 'event', 'appointment'])
-    || waitingForVoiceResponse ) {
+  else if ((userSaid(transcript, ['make', 'schedule', 'create', 'new', 'add'])
+    && userSaid(transcript,  ['meeting', 'class', 'interview', 'event', 'appointment']))
+    || waitingForVoiceResponse === 'new event time' ) {
     // console.log("making event");
 
     var startTime, endTime;
@@ -304,14 +236,15 @@ var processSpeech = function(transcript) {
     if (startTime == null) {
       console.log("no start time yet");
 
-      if (waitingForVoiceResponse) {
-        // transcript should have "Start time [user input]"" so parse time right after the word 'time' "
+      if (waitingForVoiceResponse === 'new event time') {
+        // transcript should have "for what time [user input]"" so parse time right after the word 'time' "
         startTime = interpretTimeInput(tokens[tokens.indexOf("time") + 1]);
         endTime = getOneHourEvent(startTime);
         waitingForVoiceResponse = false;
+        processed = true;
       } else {
       generateSpeech("For what time?", () => {
-        waitingForVoiceResponse = true;
+        waitingForVoiceResponse = 'new event time';
         processed = true;
         });
       }
@@ -326,7 +259,7 @@ var processSpeech = function(transcript) {
       var newEvent = makeEvent("New Event", startTime, endTime);
       insertEvent(newEvent);
       processed = true;
-      }
+    }
   }
 
   // show tomorrow's calendar

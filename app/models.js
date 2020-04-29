@@ -67,3 +67,118 @@ var Event = Backbone.Model.extend({
     this.set('surface', that.get('surface'));
   }
 });
+
+/**
+* Class for designing dialogues.
+*
+* Attributes:
+*   initial_command: list of list of strings. The command is triggered by an and of ors. 
+*       The example below represents a command that is triggered when the user says 
+*       'keyword_1 keyword_3' or 'keyword_2 keyword_3'
+*   current_command: list of list of strings as specified above
+*   advance: a function that advances the dialogue by generating any computer speech if
+*       necessary, updating current_command to the next command, and setting the state
+*       if necessary
+*   state: a place to store the current dialogue state is needed
+*/
+var Dialogue = Backbone.Model.extend({
+  defaults: {
+    initial_command: [['keyword_1', 'keyword_2'], ['keyword_3']],
+    current_command: null,
+    advance: function() {},
+    state: {}
+  },
+  isTriggered: function(transcript) {
+    if (this.get('current_command') === null) {
+      this.reset();
+    }
+    triggered = true;
+    this.get('current_command').forEach(function(keywords) {
+      if (!userSaid(transcript, keywords)) {
+        triggered = false;
+      }
+    });
+    return triggered;
+  },
+  reset: function() {
+    this.set('current_command', this.get('initial_command'));
+    this.set('state', {});
+  },
+});
+
+//  IMPLEMENT DIALOGUES BELOW
+
+/**
+* Dialogue to reschedule an event
+*
+* [['reschedule', 'move']] --- reschedule if user specifies an event and a time
+*     |
+*     ├-- "To what time?", [['time']] --- ask user to specify time
+*     |
+*     ├-- TODO: ask user to specify event
+*/
+var rescheduleDialogue = new Dialogue({
+  initial_command: [['reschedule', 'move']],
+  advance: function(transcript) {
+    var tokens = transcript.split(" ");
+
+    if (rescheduleDialogue.get('current_command').equals([['reschedule', 'move']])) {
+
+      // try to identify which event to delete
+      var eventToMove = null;
+      voiceOnly = false;
+      // see if user said an event name
+      activeEvents.forEach((event, i) => {
+        if (userSaid(transcript, [event.get('data').summary])) {
+          voiceOnly = true;
+          eventToMove = event;
+        }
+      });
+      // check if user is pointing to an event
+      if (!voiceOnly && hoveredEvent) {
+        eventToMove = hoveredEvent;
+      }
+
+      // move event if one was properly specified
+      if (eventToMove) {
+        console.log('reschedule', eventToMove.get('data').summary);
+        // get new start time
+        if (userSaid(transcript, ['to'])) {
+          var timeString = tokens[tokens.indexOf("to") + 1];
+          var newStartTime;
+          var moveToTomorrow = false;
+          if (timeString === 'tomorrow') {
+            newStartTime = eventToMove.get('start').toDate();
+            newStartTime.setDate(newStartTime.getDate() + 1);
+            moveToTomorrow = true;
+          } else {
+            newStartTime = interpretTimeInput(timeString);
+          }
+          moveEvent(eventToMove, newStartTime, moveToTomorrow);
+        } else {
+          console.log('no time specified')
+          // system feedback on how to specify a time
+          generateSpeech("To what time?", () => {
+            rescheduleDialogue.set('state', { eventToMove });
+            rescheduleDialogue.set('current_command', [['']])
+          });
+        }
+      } else {
+        // system feedback on how to specify an event
+      }
+    } else if (rescheduleDialogue.get('current_command').equals([['']])) {
+      var timeString = tokens[0];
+      var newStartTime;
+      if (timeString === 'tomorrow') {
+        newStartTime = eventToMove.get('start').toDate();
+        newStartTime.setDate(newStartTime.getDate() + 1);
+        moveToTomorrow = true;
+      } else {
+        newStartTime = interpretTimeInput(timeString);
+      }
+      moveEvent(rescheduleDialogue.get('state').eventToMove, newStartTime, moveToTomorrow);
+      // reset dialogue to beginning
+      rescheduleDialogue.reset();
+    }
+  }
+})
