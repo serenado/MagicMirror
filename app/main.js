@@ -146,21 +146,7 @@ var processSpeech = function(transcript) {
   // TODO: fade out
   else if (isCalendarShowing() && userSaid(transcript, ['delete', 'cancel'])) {
     // identify which event to delete
-    var eventToDelete = null;
-    voiceOnly = false;
-    // see if user said an event name
-    activeEvents.forEach((event, i) => {
-      if (userSaid(transcript, [event.get('data').summary])) {
-        console.log('delete', event.get('data').summary);
-        voiceOnly = true;
-        eventToDelete = event;
-      }
-    });
-    // check if user is using a point-and-say command
-    if (!voiceOnly && hoveredEvent) {     
-      console.log('delete', hoveredEvent.get('data').summary);
-      eventToDelete = hoveredEvent;
-    }
+    var eventToDelete = getSpecifiedEvent(transcript);
 
     // delete event if one was properly specified
     if (eventToDelete) {
@@ -172,7 +158,6 @@ var processSpeech = function(transcript) {
 
   // reschedule an event
   else if (isCalendarShowing() && rescheduleDialogue.isTriggered(transcript)) {
-    console.log('advance reschedule dialogue')
     rescheduleDialogue.get('advance')(transcript);
     processed = true;
   }
@@ -184,82 +169,9 @@ var processSpeech = function(transcript) {
   }
 
   // add a new event
-  else if ((userSaid(transcript, ['make', 'schedule', 'create', 'new', 'add'])
-    && userSaid(transcript,  ['meeting', 'class', 'interview', 'event', 'appointment']))
-    || waitingForVoiceResponse === 'new event time' ) {
-    // console.log("making event");
-
-    var startTime, endTime;
-
-
-    var tokens = transcript.split(" ");
-    var atIndex = tokens.indexOf("at");
-    var fromIndex = transcript.indexOf("from");
-    if (atIndex != -1) {
-      // if user says "at"
-      var timeString = tokens[atIndex+1];
-      startTime = interpretTimeInput(timeString);
-
-      // makes event, assumes 1 hour duration 
-      endTime = getOneHourEvent(startTime);
-
-    } else if (fromIndex != -1) {
-      // if user says "from"
-      var startString = tokens[fromIndex+1];
-      startTime = interpretTimeInput(startString);
-
-      var endIndex = -1;
-      var endOptions = ["until", "till", "to"];
-      for (var i = 0; i < endOptions.length; i++) {
-        if (tokens.indexOf(endOptions[i]) > -1) {
-          endIndex = tokens.indexOf(endOptions[i]);
-        }
-      }
-      if (endIndex == -1) {
-        endTime = getOneHourEvent(startTime);   
-      } else {
-        var endString = tokens[endIndex + 1];
-        endTime = interpretTimeInput(endString);
-      }
-    } else {
-      // if user uses Leap to point at time
-      // only uses time if cursor is hovering over calendar
-      if (cursor.get('screenPosition')[0] > 60 && cursor.get('screenPosition')[0] < 280) {
-        startTime = new Date();
-        startTime.setHours(getTimeFromCursor(cursor));
-        startTime.setMinutes(0);
-        endTime = getOneHourEvent(startTime);
-      }
-    }
-
-    // check if start and end time is defined
-    if (startTime == null) {
-      console.log("no start time yet");
-
-      if (waitingForVoiceResponse === 'new event time') {
-        // transcript should have "for what time [user input]"" so parse time right after the word 'time' "
-        startTime = interpretTimeInput(tokens[tokens.indexOf("time") + 1]);
-        endTime = getOneHourEvent(startTime);
-        waitingForVoiceResponse = false;
-        processed = true;
-      } else {
-      generateSpeech("For what time?", () => {
-        waitingForVoiceResponse = 'new event time';
-        processed = true;
-        });
-      }
-    }
-
-    if (userSaid(transcript, ["tomorrow"]) || activeCalendar === 'tomorrow') {
-      startTime.setDate(startTime.getDate() + 1);
-      endTime.setDate(endTime.getDate() + 1);
-    }
-
-    if (startTime != null && endTime != null) {
-      var newEvent = makeEvent("New Event", startTime, endTime);
-      insertEvent(newEvent);
-      processed = true;
-    }
+  else if (isCalendarShowing() && makeEventDialogue.isTriggered(transcript)) {
+    makeEventDialogue.get('advance')(transcript);
+    processed = true;
   }
 
   // show tomorrow's calendar

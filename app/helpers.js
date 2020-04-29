@@ -219,6 +219,24 @@ var generateSpeech = function(message, callback) {
   }
 };
 
+var getSpecifiedEvent = function(transcript) {
+  var specifiedEvent = null;
+  voiceOnly = false;
+  // see if user said an event name
+  activeEvents.forEach((event, i) => {
+    if (userSaid(transcript, [event.get('data').summary])) {
+      voiceOnly = true;
+      specifiedEvent = event;
+    }
+  });
+  // check if user is using a point-and-say command
+  if (!voiceOnly && hoveredEvent) {     
+    specifiedEvent = hoveredEvent;
+  }
+
+  return specifiedEvent;
+}
+
 // given a start Date, returns an end Date exactly one hour later
 var getOneHourEvent = function(startTime) {
   endTime = new Date();
