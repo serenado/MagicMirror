@@ -69,7 +69,8 @@ var Event = Backbone.Model.extend({
 });
 
 /**
-* Class for designing dialogues.
+* Class for designing dialogues. Dialogues are reset to the beginning if the user says
+* "nevermind" or "forget it".
 *
 * Attributes:
 *   initial_command: list of list of strings. The command is triggered by an and of ors. 
@@ -79,6 +80,8 @@ var Event = Backbone.Model.extend({
 *   advance: a function that advances the dialogue by generating any computer speech if
 *       necessary, updating current_command to the next command, and setting the state
 *       if necessary
+*   step: a string to track which step of the dialogue you are on. you don't have
+*       to use it, but it can be helpful.
 *   state: a place to store the current dialogue state is needed
 */
 var Dialogue = Backbone.Model.extend({
@@ -86,12 +89,25 @@ var Dialogue = Backbone.Model.extend({
     initial_command: [['keyword_1', 'keyword_2'], ['keyword_3']],
     current_command: null,
     advance: function() {},
+    step: 'start',
     state: {}
   },
   isTriggered: function(transcript) {
     if (this.get('current_command') === null) {
       this.reset();
     }
+
+    // if computer is speaking, return false
+    if (this.get('step') === 'speaking') {
+      return false;
+    }
+
+    // if user says nevermind, reset dialogue
+    if (userSaid(transcript, ['nevermind', 'forget'])) {
+      this.reset();
+      return false;
+    }
+
     triggered = true;
     this.get('current_command').forEach(function(keywords) {
       if (!userSaid(transcript, keywords)) {
@@ -103,73 +119,152 @@ var Dialogue = Backbone.Model.extend({
   reset: function() {
     this.set('current_command', this.get('initial_command'));
     this.set('state', {});
+    this.set('step', 'start');
   },
 });
 
 //  IMPLEMENT DIALOGUES BELOW
 
 /**
+* Dialogue to delete an event
+*
+* [['delete', 'cancel']] --> delete event
+*   |
+*   └--(if user did not specify an event)--> "Which event should I delete?", [['']] --> delete
+*/
+var deleteDialogue = new Dialogue({
+  initial_command: [['delete', 'cancel']],
+  advance: function(transcript) {
+    var tokens = transcript.split(" ");
+
+    if (deleteDialogue.get('step') === 'start') {
+
+      // try to identify which event to delete
+      var eventToDelete = getSpecifiedEvent(transcript);
+
+      // delete event if one was properly specified
+      if (eventToDelete) {
+        deleteEvent(eventToDelete.get('data').calendarId, eventToDelete.get('data').id, eventToDelete);
+      } else {
+        // system feedback on how to specify an event
+        deleteDialogue.set('step', 'speaking');
+        generateSpeech("Which event should I delete?", () => {
+          deleteDialogue.set('current_command', [['']]);
+          deleteDialogue.set('step', 'event');
+        });
+      }
+    } else if (deleteDialogue.get('step') === 'event') {
+      var eventToDelete = getSpecifiedEvent(transcript);
+
+      // see if event was properly specified
+      if (eventToDelete) {       
+        deleteEvent(eventToDelete.get('data').calendarId, eventToDelete.get('data').id, eventToDelete);
+        // reset dialogue to beginning
+        deleteDialogue.reset();
+      } else {
+        deleteDialogue.set('step', 'speaking');
+        generateSpeech("Try saying an event name.", () => {
+          deleteDialogue.set('step', 'event');
+        });
+      }
+    }
+  }
+});
+
+/**
 * Dialogue to reschedule an event
 *
-* [['reschedule', 'move']] --- reschedule if user specifies an event and a time
-*     |
-*     ├-- "To what time?", [['']] --- ask user to specify time
-*     |
-*     └-- TODO: ask user to specify event
+* [['reschedule', 'move']] --> reschedule event to new time
+*   |
+*   ├--(if user did not specify an event)--> "Which event should I reschedule?", [['']] --> reschedule
+*   |                                                         |
+*   |                                          (if user did not specify a time)
+*   |                                                         |
+*   |                                             ┌-----------┘
+*   |                                             v
+*   └--(if user did not specify a time)--> "To what time?", [['']] --> ask user to specify time
 */
 var rescheduleDialogue = new Dialogue({
   initial_command: [['reschedule', 'move']],
   advance: function(transcript) {
     var tokens = transcript.split(" ");
 
-    if (rescheduleDialogue.get('current_command').equals([['reschedule', 'move']])) {
+    if (rescheduleDialogue.get('step') === 'start') {
 
       // try to identify which event to delete
       var eventToMove = getSpecifiedEvent(transcript);
 
-      // move event if one was properly specified
-      if (eventToMove) {
-        console.log('reschedule', eventToMove.get('data').summary);
-        // get new start time
-        if (userSaid(transcript, ['to'])) {
-          var timeString = tokens[tokens.indexOf("to") + 1];
-          var newStartTime;
-          var moveToTomorrow = false;
-          if (timeString === 'tomorrow') {
-            newStartTime = eventToMove.get('start').toDate();
-            newStartTime.setDate(newStartTime.getDate() + 1);
-            moveToTomorrow = true;
-          } else {
-            newStartTime = interpretTimeInput(timeString);
-          }
-          moveEvent(eventToMove, newStartTime, moveToTomorrow);
-        } else {
-          // system feedback on how to specify a time
-          generateSpeech("To what time?", () => {
-            rescheduleDialogue.set('state', { eventToMove });
-            rescheduleDialogue.set('current_command', [['']])
-          });
-        }
-      } else {
-        // system feedback on how to specify an event
-      }
-    } else if (rescheduleDialogue.get('current_command').equals([['']])) {
-      var timeString = tokens[0];
-      var newStartTime;
-      if (timeString === 'tomorrow') {
+      // try to identify what time to reschedule to
+      var newStartTime = getSpecifiedTime(transcript, 'to');
+      var moveToTomorrow = false;
+      if (newStartTime === 'tomorrow') {
         newStartTime = eventToMove.get('start').toDate();
         newStartTime.setDate(newStartTime.getDate() + 1);
         moveToTomorrow = true;
-      } else {
-        newStartTime = interpretTimeInput(timeString);
       }
-      moveEvent(rescheduleDialogue.get('state').eventToMove, newStartTime, moveToTomorrow);
 
-      // reset dialogue to beginning
-      rescheduleDialogue.reset();
+      // move event if one was properly specified
+      if (eventToMove && newStartTime) {
+        console.log('reschedule', eventToMove.get('data').summary);
+        moveEvent(eventToMove, newStartTime, moveToTomorrow);
+      } else if (!eventToMove) {
+        // system feedback on how to specify an event
+        rescheduleDialogue.set('step', 'speaking');
+        generateSpeech("Which event should I reschedule?", () => {
+          rescheduleDialogue.set('state', { newStartTime, moveToTomorrow });
+          rescheduleDialogue.set('current_command', [['']]);
+          rescheduleDialogue.set('step', 'event');
+        });
+      } else {
+        // system feedback on how to specify a time
+        rescheduleDialogue.set('step', 'speaking');
+        generateSpeech("To what time?", () => {
+          rescheduleDialogue.set('state', { eventToMove });
+          rescheduleDialogue.set('current_command', [['']]);
+          rescheduleDialogue.set('step', 'time');
+        });
+      }
+    } else if (rescheduleDialogue.get('step') === 'event') {
+      var eventToMove = getSpecifiedEvent(transcript);
+
+      // see if event was properly specified
+      if (eventToMove) {       
+        // move event if time was properly specified
+        if (rescheduleDialogue.get('state').newStartTime) {
+          moveEvent(eventToMove, rescheduleDialogue.get('state').newStartTime, rescheduleDialogue.get('state').moveToTomorrow);
+          // reset dialogue to beginning
+          rescheduleDialogue.reset();
+        } else {
+          // system feedback on how to specify a time
+          rescheduleDialogue.set('step', 'speaking');
+          generateSpeech("Got it. What time should I reschedule to?", () => {
+            rescheduleDialogue.set('state', { eventToMove });
+            rescheduleDialogue.set('step', 'time');
+          });
+        }
+      } else {
+        rescheduleDialogue.set('step', 'speaking');
+        generateSpeech("Try saying an event name.", () => {
+          rescheduleDialogue.set('step', 'event');
+        });
+      }
+    } else if (rescheduleDialogue.get('step') === 'time') {
+      var newStartTime = getSpecifiedTime(transcript);
+
+      if (newStartTime) {
+        var moveToTomorrow = false;
+        if (newStartTime === 'tomorrow') {
+          newStartTime = eventToMove.get('start').toDate();
+          newStartTime.setDate(newStartTime.getDate() + 1);
+          moveToTomorrow = true;
+        }
+        moveEvent(rescheduleDialogue.get('state').eventToMove, newStartTime, moveToTomorrow);
+        // reset dialogue to beginning
+        rescheduleDialogue.reset();
+      }
     }
   }
-})
+});
 
 /**
 * Dialogue to create an event
@@ -191,7 +286,7 @@ var makeEventDialogue = new Dialogue({
       var startTime, endTime;
 
       var atIndex = tokens.indexOf("at");
-      var fromIndex = transcript.indexOf("from");
+      var fromIndex = tokens.indexOf("from");
       if (atIndex != -1) {
         // if user says "at"
         var timeString = tokens[atIndex+1];
@@ -244,7 +339,6 @@ var makeEventDialogue = new Dialogue({
         insertEvent(newEvent);
         processed = true;
       }
-
     } else if (makeEventDialogue.get('current_command').equals([['']])) {
       startTime = interpretTimeInput(tokens[0]);
       endTime = getOneHourEvent(startTime);
@@ -261,4 +355,4 @@ var makeEventDialogue = new Dialogue({
       makeEventDialogue.reset();
     }
   }
-})
+});

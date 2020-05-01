@@ -144,16 +144,9 @@ var processSpeech = function(transcript) {
 
   // delete an event
   // TODO: fade out
-  else if (isCalendarShowing() && userSaid(transcript, ['delete', 'cancel'])) {
-    // identify which event to delete
-    var eventToDelete = getSpecifiedEvent(transcript);
-
-    // delete event if one was properly specified
-    if (eventToDelete) {
-      // delete event from google calendar to sync and redraw
-      deleteEvent(eventToDelete.get('data').calendarId, eventToDelete.get('data').id, eventToDelete);
-      processed = true;
-    }
+  else if (isCalendarShowing() && deleteDialogue.isTriggered(transcript)) {
+    deleteDialogue.get('advance')(transcript);
+    processed = true;
   }
 
   // reschedule an event

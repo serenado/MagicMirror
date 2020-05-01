@@ -237,6 +237,27 @@ var getSpecifiedEvent = function(transcript) {
   return specifiedEvent;
 }
 
+// gets specified time given a transcript and an optional clue word
+// such as "at", to", or "from" that precedes the time. if no clue
+// is provided, the first word of the transcript will be used
+var getSpecifiedTime = function(transcript, clue='') {
+  var tokens = transcript.trim().split(" ");
+  console.log(tokens)
+  var timeIndex;
+  if (clue === '') {
+    timeIndex = 0;
+  } else {
+    timeIndex = tokens.indexOf(clue) + 1
+    if (timeIndex === 0) return false;  // clue word not found
+  }
+
+  var timeString = tokens[timeIndex];
+  if (timeString === 'tomorrow') {
+    return 'tomorrow';
+  }
+  return interpretTimeInput(timeString);
+}
+
 // given a start Date, returns an end Date exactly one hour later
 var getOneHourEvent = function(startTime) {
   endTime = new Date();
