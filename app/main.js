@@ -124,6 +124,16 @@ var processSpeech = function(transcript) {
     processed = true;
   }
 
+  // show help menu
+  else if (!helpMenuFader.isVisible() && userSaid(transcript, ['help'])) {
+    helpMenuFader.show();
+  }
+
+  // hide help menu
+  else if (helpMenuFader.isVisible() && userSaid(transcript, ['close', 'hide', 'exit'])) {
+    helpMenuFader.hide();
+  }
+
   // see event details
   else if (isCalendarShowing() && userSaid(transcript, ['see more', 'seymour', 'details', 'detail'])
         && !userSaid(transcript, ['hide', 'close'])) {

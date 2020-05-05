@@ -406,7 +406,7 @@ var drawHelpMenu = function() {
       <li> Hover over events to see more details. Swipe up to hide details. </li>
       <li> Events can be created and rescheduled through pointing and speaking, or by engaging in a dialogue with the mirror. </li>
      </ul>
-     <p> Make a circle gesture to hide the help menu. Hover over the help button in the bottom left corner to access this menu again. </p>
+     <p> Make a circle gesture to hide the help menu. Hover over the help button in the bottom right corner to access this menu again. </p>
     `)
   var helpMenuModifier = new StateModifier({
     origin: [0.0, 0.0],
