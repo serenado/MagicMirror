@@ -27,7 +27,8 @@ Leap.loop({ enableGestures: true},  function(frame) {
 
     // Use the hand data to control the cursor's screen position
     cursorPosition = hand.screenPosition();
-    cursorPosition[1] += 400;
+    cursorPosition[1] += 550;
+    //console.log(cursorPosition)
     cursor.setScreenPosition(cursorPosition);
 
     // highlight hovered event
@@ -38,6 +39,12 @@ Leap.loop({ enableGestures: true},  function(frame) {
       }
     }
 
+    // check if hovering over help button
+    if (cursorPosition[0] > 0.95 * window.innerWidth && cursorPosition[1] > 0.95 * window.innerHeight) {
+      console.log("pull up help menu")
+      helpMenuFader.show()
+    }
+
     // GESTURE RECOGNITION
 
     // Leap API's built in gesture recognition
@@ -46,6 +53,7 @@ Leap.loop({ enableGestures: true},  function(frame) {
         switch (gesture.type){
           case "circle":
             console.log("Circle Gesture");
+            helpMenuFader.hide();
             break;
           case "keyTap":
             console.log("Key Tap Gesture");

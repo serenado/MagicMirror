@@ -18,6 +18,9 @@ var eventsTomorrow = [];
 var calendarFader = new Fader();
 var calendarLabelsFader = new Fader();
 
+// make fader for help menu
+var helpMenuFader = new Fader();
+
 // store Fader to show/hide event details
 var eventDetailsFader = new Fader();
 
@@ -57,6 +60,21 @@ var setupUserInterface = function() {
     align: [0.0, 1.0]
   })
   mainContext.add(otherModifier).add(otherFeedback);
+
+  // Add help menu
+  var helpButton = new Surface({
+    content:`<img src="../img/icons8-help-50.png" height="50" width="50">`,
+    size: [60, 110],
+    properties: {
+      color:"white"
+    }
+  });
+
+  var helpModifier = new StateModifier({
+    origin: [1.0, 0.5],
+    align: [1.0, 1.0]
+  });
+  mainContext.add(helpModifier).add(helpButton);
 
   // Draw the cursor
   var cursorSurface = new Surface({
@@ -132,6 +150,11 @@ var setupUserInterface = function() {
 
   // Draw event details panel
   drawEventDetails();
+
+  // draw help menu and show on startup
+  drawHelpMenu();
+  helpMenuFader.show();
+
 };
 
 // CALENDAR
@@ -355,3 +378,39 @@ var drawEventDetails = function() {
 
   mainContext.add(eventDetailsFader).add(eventDetailsSurface);
 };
+
+var drawHelpMenu = function() {
+  // make help menu
+  var helpMenu = new Surface({
+    size: [window.innerWidth / 2, window.innerHeight / 2],
+    //content:"<h2> Help Menu </h2> To login, ",
+    properties: {
+      backgroundColor: "#F2D492",
+      color: 'black',
+      fontFamily: "verdana",
+      fontSize: "12px",
+      paddingLeft: "20px",
+      paddingRight: "20px",
+      borderRadius: "20px",
+    }
+  });
+  helpMenu.setContent(
+    `<h3 style="text-align:center"> Help Menu </h3>
+    <h3>  Logging In </h3>
+    <p>   To log in, say 'Login'. If no prompt pops up to ask for your Google account information, make sure
+     that your browser is set to allow popups and microphone input. </p>
+     <h3> Tips </h3>
+     <ul>
+      <li> Swipe left and right to switch between today and tomorrow's calendar. This can also be triggered with voice commands. 
+      Try saying 'today' or 'tomorrow'. </li>
+      <li> Hover over events to see more details. Swipe up to hide details. </li>
+      <li> Events can be created and rescheduled through pointing and speaking, or by engaging in a dialogue with the mirror. </li>
+     </ul>
+     <p> Make a circle gesture to hide the help menu. Hover over the help button in the bottom left corner to access this menu again. </p>
+    `)
+  var helpMenuModifier = new StateModifier({
+    origin: [0.0, 0.0],
+    align: [0.25, 0.25]
+  })
+  mainContext.add(helpMenuFader).add(helpMenuModifier).add(helpMenu);
+} 
