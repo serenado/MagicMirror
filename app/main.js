@@ -8,6 +8,8 @@ setupUserInterface();
 
 if (AUTOSHOW) { showCalendar(); }
 
+if (AUTOHELP) { helpMenuFader.show(); }
+
 var hoveredEvent = false;
 var activeCalendar = 'today';
 var activeEvents = events;

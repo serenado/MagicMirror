@@ -22,3 +22,4 @@ var VOICEINDEX = 2; // UK British Female
 var LEAPSCALE = 0.6;
 var DEBUGSPEECH = true;
 var AUTOSHOW = true;
+var AUTOHELP = true;

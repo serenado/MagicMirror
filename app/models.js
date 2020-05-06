@@ -277,12 +277,15 @@ var rescheduleDialogue = new Dialogue({
 *     |
 *     └-- TODO: "What should it be called?": ask user to specify title
 */
+var event_types = ['Event', 'Meeting', 'Class', 'Interview', 'Appointment'];
 var makeEventDialogue = new Dialogue({
-  initial_command: [['make', 'schedule', 'create', 'new', 'add'], ['meeting', 'class', 'interview', 'event', 'appointment']],
+  initial_command: [['make', 'schedule', 'create', 'new', 'add'], event_types],
   advance: function(transcript) {
     var tokens = transcript.split(" ");
 
-    if (makeEventDialogue.get('current_command').equals(makeEventDialogue.get('initial_command'))) {
+    if (makeEventDialogue.get('step') === 'start') {
+      
+      // extract event time
       var startTime, endTime;
 
       var atIndex = tokens.indexOf("at");
@@ -324,22 +327,56 @@ var makeEventDialogue = new Dialogue({
         }
       }
 
+      // extract event name
+      var eventName = false;
+      var named = ['called', 'named', 'titled'];
+      named.forEach(keyword => {
+        var index = tokens.indexOf(keyword);
+        if (index != -1) {
+          var endIndex = undefined;
+          if (atIndex != -1) {
+            endIndex = atIndex;
+          } else if (fromIndex != -1) {
+            endIndex = fromIndex;
+          }
+          eventName = tokens.slice(index + 1, endIndex).join(" ");
+        }
+      });
+      if (!eventName) {       
+        event_types.forEach(event_type => {
+          var index = tokens.indexOf(event_type.toLowerCase());
+          if (index != -1) {
+            eventName = event_type;
+          }
+        });
+      }
+
       // if no start time specified, ask for a time and update command
       if (startTime == null) {
         generateSpeech("For what time?", () => {
-          makeEventDialogue.set('current_command', [['']])
+          makeEventDialogue.set('current_command', [['']]);
+          makeEventDialogue.set('step', 'time');
+          makeEventDialogue.set('state', { eventName });
         });
-      } else { // otherwise, create an event at specified time
-
+      } else if (eventName === 'Event') { // if no event name specified, ask for one
+        generateSpeech("What should I name it?", () => {
+          if (userSaid(transcript, ["tomorrow"]) || activeCalendar === 'tomorrow') {
+            startTime.setDate(startTime.getDate() + 1);
+            endTime.setDate(endTime.getDate() + 1);
+          }
+          makeEventDialogue.set('current_command', [['']]);
+          makeEventDialogue.set('step', 'name');
+          makeEventDialogue.set('state', { startTime, endTime });
+        });
+      } else { // otherwise, create an event at specified time with specified name
         if (userSaid(transcript, ["tomorrow"]) || activeCalendar === 'tomorrow') {
           startTime.setDate(startTime.getDate() + 1);
           endTime.setDate(endTime.getDate() + 1);
         }
-        var newEvent = makeEvent("New Event", startTime, endTime);
+        var newEvent = makeEvent(eventName, startTime, endTime);
         insertEvent(newEvent);
-        processed = true;
       }
-    } else if (makeEventDialogue.get('current_command').equals([['']])) {
+    } else if (makeEventDialogue.get('step') === 'time') {
       startTime = interpretTimeInput(tokens[0]);
       endTime = getOneHourEvent(startTime);
 
@@ -347,11 +384,28 @@ var makeEventDialogue = new Dialogue({
         startTime.setDate(startTime.getDate() + 1);
         endTime.setDate(endTime.getDate() + 1);
       }
-      var newEvent = makeEvent("New Event", startTime, endTime);
-      insertEvent(newEvent);
-      processed = true;
+      var eventName = makeEventDialogue.get('state').eventName;
+      if (eventName === 'Event') {
+        makeEventDialogue.set('step', 'speaking');
+        generateSpeech("Got it. What should it be called?", () => {
+          makeEventDialogue.set('current_command', [['']]);
+          makeEventDialogue.set('step', 'name');
+          makeEventDialogue.set('state', { startTime, endTime });
+        });
+      } else {
+        var newEvent = makeEvent(eventName, startTime, endTime);
+        insertEvent(newEvent);
 
-      // reset dialogue to beginning
+        makeEventDialogue.reset();
+      }
+    } else if (makeEventDialogue.get('step') === 'name') {
+      var eventName = transcript;
+      var startTime = makeEventDialogue.get('state').startTime;
+      var endTime = makeEventDialogue.get('state').endTime;
+  
+      var newEvent = makeEvent(eventName, startTime, endTime);
+      insertEvent(newEvent);
+
       makeEventDialogue.reset();
     }
   }

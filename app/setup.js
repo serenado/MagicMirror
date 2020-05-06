@@ -153,8 +153,6 @@ var setupUserInterface = function() {
 
   // draw help menu and show on startup
   drawHelpMenu();
-  helpMenuFader.show();
-
 };
 
 // CALENDAR
